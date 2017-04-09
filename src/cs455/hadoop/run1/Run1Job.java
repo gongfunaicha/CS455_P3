@@ -9,6 +9,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
+// Class for Map Reduce job for run 1
 public class Run1Job {
     public static void main(String[] args)
     {
