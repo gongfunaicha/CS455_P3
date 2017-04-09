@@ -9,14 +9,15 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Run1Combiner extends Reducer<Text, Run1CombinedWritable, Text, Run1CombinedWritable>{
     @Override
     protected void reduce(Text key, Iterable<Run1CombinedWritable> values, Context context) throws IOException, InterruptedException {
         // Group Run1CombinedWritable by State
-        HashMap<String, ArrayList<Run1CombinedWritable>> groupByState = new HashMap<>();
+        // Used TreeMap due to it is sorted by key
+        TreeMap<String, ArrayList<Run1CombinedWritable>> groupByState = new TreeMap<>();
 
         for (Run1CombinedWritable val: values)
         {
