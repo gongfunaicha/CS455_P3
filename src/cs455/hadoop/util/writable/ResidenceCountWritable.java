@@ -1,5 +1,6 @@
 package cs455.hadoop.util.writable;
 
+import cs455.hadoop.util.objects.ResidenceCountObject;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 
@@ -19,10 +20,23 @@ public class ResidenceCountWritable implements Writable {
         ownedCount = new LongWritable(0);
     }
 
+    // Might be deprecated
     public ResidenceCountWritable(long rentCount, long ownedCount)
     {
         this.rentCount = new LongWritable(rentCount);
         this.ownedCount = new LongWritable(ownedCount);
+    }
+
+    public ResidenceCountWritable(ResidenceCountObject residenceCountObject)
+    {
+        this.rentCount = new LongWritable(residenceCountObject.getRentCount());
+        this.ownedCount = new LongWritable(residenceCountObject.getOwnedCount());
+    }
+
+    // Getter methods
+    public ResidenceCountObject getResidenceCountObject()
+    {
+        return new ResidenceCountObject(getRentCount(), getOwnedCount());
     }
 
     public long getRentCount()

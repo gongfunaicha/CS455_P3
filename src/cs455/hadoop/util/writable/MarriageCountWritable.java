@@ -1,5 +1,6 @@
 package cs455.hadoop.util.writable;
 
+import cs455.hadoop.util.objects.MarriageCountObject;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 
@@ -23,12 +24,27 @@ public class MarriageCountWritable implements Writable {
         femaleTotal = new LongWritable(0);
     }
 
+    // Might be deprecated
     public MarriageCountWritable(long maleNeverMarried, long maleTotal, long femaleNeverMarried, long femaleTotal)
     {
         this.maleNeverMarried = new LongWritable(maleNeverMarried);
         this.maleTotal = new LongWritable(maleTotal);
         this.femaleNeverMarried = new LongWritable(femaleNeverMarried);
         this.femaleTotal = new LongWritable(femaleTotal);
+    }
+
+    public MarriageCountWritable(MarriageCountObject marriageCountObject)
+    {
+        this.maleNeverMarried = new LongWritable(marriageCountObject.getMaleNeverMarried());
+        this.maleTotal = new LongWritable(marriageCountObject.getMaleTotal());
+        this.femaleNeverMarried = new LongWritable(marriageCountObject.getFemaleNeverMarried());
+        this.femaleTotal = new LongWritable(marriageCountObject.getFemaleTotal());
+    }
+
+    // Getter methods
+    public MarriageCountObject getMarriageCountObject()
+    {
+        return new MarriageCountObject(getMaleNeverMarriedCount(), getMaleTotalCount(), getFemaleNeverMarriedCount(), getFemaleTotalCount());
     }
 
     public long getMaleNeverMarriedCount()

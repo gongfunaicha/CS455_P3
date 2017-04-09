@@ -1,5 +1,6 @@
 package cs455.hadoop.util.writable;
 
+import cs455.hadoop.util.objects.AgeDistributionObject;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 
@@ -31,6 +32,7 @@ public class AgeDistributionCountWritable implements Writable {
         female40_ = new LongWritable(0);
     }
 
+    // Might be deprecated
     public AgeDistributionCountWritable(long male_18, long male19_29, long male30_39, long male40_, long female_18, long female19_29, long female30_39, long female40_)
     {
         this.male_18 = new LongWritable(male_18);
@@ -43,7 +45,25 @@ public class AgeDistributionCountWritable implements Writable {
         this.female40_ = new LongWritable(female40_);
     }
 
+    public AgeDistributionCountWritable(AgeDistributionObject ageDistributionObject)
+    {
+        this.male_18 = new LongWritable(ageDistributionObject.getMale_18());
+        this.male19_29 = new LongWritable(ageDistributionObject.getMale19_29());
+        this.male30_39 = new LongWritable(ageDistributionObject.getMale30_39());
+        this.male40_ = new LongWritable(ageDistributionObject.getMale40_());
+        this.female_18 = new LongWritable(ageDistributionObject.getFemale_18());
+        this.female19_29 = new LongWritable(ageDistributionObject.getFemale19_29());
+        this.female30_39 = new LongWritable(ageDistributionObject.getFemale30_39());
+        this.female40_ = new LongWritable(ageDistributionObject.getFemale40_());
+    }
+
     // Getter methods
+    public AgeDistributionObject getAgeDistributionObject()
+    {
+        return new AgeDistributionObject(getMale_18(), getMale19_29(), getMale30_39(), getMale40_(), getFemale_18(), getFemale19_29(), getFemale30_39(), getFemale40_());
+    }
+
+
     public long getMale_18()
     {
         return male_18.get();
