@@ -47,6 +47,11 @@ public class Run1CombinedWritable implements Writable{
         return residenceCountWritable.getResidenceCountObject();
     }
 
+    public String getState()
+    {
+        return state.toString();
+    }
+
     // Read in question order
     @Override
     public void readFields(DataInput dataInput) throws IOException {
