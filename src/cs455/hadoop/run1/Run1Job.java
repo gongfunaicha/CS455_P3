@@ -1,5 +1,6 @@
 package cs455.hadoop.run1;
 
+import cs455.hadoop.util.writable.Run1CombinedWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -22,16 +23,16 @@ public class Run1Job {
 
             // Current class
             job.setJarByClass(Run1Job.class);
-            // TODO: Mapper class
-//            job.setMapperClass(ResidenceTypeMapper.class);
+            // Mapper class
+            job.setMapperClass(Run1Mapper.class);
             // TODO: Combiner class
 //            job.setCombinerClass(ResidenceTypeCombiner.class);
             // TODO: Reducer class
 //            job.setReducerClass(ResidenceTypeReducer.class);
-            // TODO: Set map output key class
-//            job.setMapOutputKeyClass(Text.class);
-            // TODO: Set map output value class
-//            job.setMapOutputValueClass(ResidenceCountWritable.class);
+            // Set map output key class
+            job.setMapOutputKeyClass(Text.class);
+            // Set map output value class
+            job.setMapOutputValueClass(Run1CombinedWritable.class);
             // TODO: Set output key class
 //            job.setOutputKeyClass(Text.class);
             // TODO: Set output value class
