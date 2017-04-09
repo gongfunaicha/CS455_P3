@@ -25,8 +25,8 @@ public class Run1Job {
             job.setJarByClass(Run1Job.class);
             // Mapper class
             job.setMapperClass(Run1Mapper.class);
-            // TODO: Combiner class
-//            job.setCombinerClass(ResidenceTypeCombiner.class);
+            // Combiner class
+            job.setCombinerClass(Run1Combiner.class);
             // TODO: Reducer class
 //            job.setReducerClass(ResidenceTypeReducer.class);
             // Set map output key class

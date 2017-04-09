@@ -1,5 +1,8 @@
 package cs455.hadoop.run1;
 
+import cs455.hadoop.util.objects.AgeDistributionObject;
+import cs455.hadoop.util.objects.MarriageCountObject;
+import cs455.hadoop.util.objects.ResidenceCountObject;
 import cs455.hadoop.util.writable.Run1CombinedWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -35,7 +38,12 @@ public class Run1Combiner extends Reducer<Text, Run1CombinedWritable, Text, Run1
             ArrayList<Run1CombinedWritable> collection = entry.getValue();
 
             // Generate one Run1CombinedWritable for this collection
+            ResidenceCountObject aggregatedResidenceCountObject = ResidenceCountObject.aggregate(collection);
+            MarriageCountObject aggregatedMarriageCountObject = MarriageCountObject.aggregate(collection);
+            AgeDistributionObject aggregatedAgeDistributionObject = AgeDistributionObject.aggregate(collection);
 
+            // Emit aggregated Run1CombinedWritable
+            context.write(new Text("1"), new Run1CombinedWritable(state, aggregatedResidenceCountObject, aggregatedMarriageCountObject, aggregatedAgeDistributionObject));
         }
     }
 }
