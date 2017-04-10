@@ -1,10 +1,7 @@
 package cs455.hadoop.run1;
 
 import cs455.hadoop.util.DataExtractor;
-import cs455.hadoop.util.objects.AgeDistributionObject;
-import cs455.hadoop.util.objects.HousePositionCountObject;
-import cs455.hadoop.util.objects.MarriageCountObject;
-import cs455.hadoop.util.objects.ResidenceCountObject;
+import cs455.hadoop.util.objects.*;
 import cs455.hadoop.util.writable.Run1CombinedWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -23,6 +20,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         MarriageCountObject marriageCountObject = null;
         AgeDistributionObject ageDistributionObject = null;
         HousePositionCountObject housePositionCountObject = null;
+        HouseValueCountObject houseValueCountObject = null;
 
         // Convert value into string
         String line = value.toString();
@@ -47,6 +45,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
             // First initialize other objects with empty constructor
             residenceCountObject = new ResidenceCountObject();
             housePositionCountObject = new HousePositionCountObject();
+            houseValueCountObject = new HouseValueCountObject();
 
             // Extract data from line
             marriageCountObject = DataExtractor.marriageCountExtractor(line);
@@ -54,7 +53,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         }
         else if (logicalRecordPartNumber == 2)
         {
-            // Using part 2 we can solve question 1 and 4
+            // Using part 2 we can solve question 1, 4, and 5
 
             // First initialize other objects with empty constructor
             marriageCountObject = new MarriageCountObject();
@@ -63,6 +62,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
             // Extract data from line
             residenceCountObject = DataExtractor.residenceCountExtractor(line);
             housePositionCountObject = DataExtractor.housePositionCountExtractor(line);
+            // TODO: Extract data for house value count object
         }
         else
         {
@@ -71,7 +71,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         }
 
         // Emit dummykey + Run1CombinedWritable pair
-        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject, housePositionCountObject));
+        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject, housePositionCountObject, houseValueCountObject));
 
     }
 }
