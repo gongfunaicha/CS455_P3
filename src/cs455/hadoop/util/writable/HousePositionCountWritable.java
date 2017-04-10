@@ -33,12 +33,12 @@ public class HousePositionCountWritable implements Writable {
     }
 
     // Copy Constructor
-    public HousePositionCountWritable(HousePositionCountWritable housePositionCountWritable)
-    {
-        urbanCount = new LongWritable(housePositionCountWritable.getUrbanCount());
-        ruralCount = new LongWritable(housePositionCountWritable.getRuralCount());
-        otherCount = new LongWritable(housePositionCountWritable.getOtherCount());
-    }
+//    public HousePositionCountWritable(HousePositionCountWritable housePositionCountWritable)
+//    {
+//        urbanCount = new LongWritable(housePositionCountWritable.getUrbanCount());
+//        ruralCount = new LongWritable(housePositionCountWritable.getRuralCount());
+//        otherCount = new LongWritable(housePositionCountWritable.getOtherCount());
+//    }
 
     // Getter methods
     public HousePositionCountObject getHousePositionCountObject()

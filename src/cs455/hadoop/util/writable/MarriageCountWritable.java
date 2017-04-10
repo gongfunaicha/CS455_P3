@@ -42,13 +42,13 @@ public class MarriageCountWritable implements Writable {
     }
 
     // Copy constructor
-    public MarriageCountWritable(MarriageCountWritable marriageCountWritable)
-    {
-        this.maleNeverMarried = new LongWritable(marriageCountWritable.getMaleNeverMarriedCount());
-        this.maleTotal = new LongWritable(marriageCountWritable.getMaleTotalCount());
-        this.femaleNeverMarried = new LongWritable(marriageCountWritable.getFemaleNeverMarriedCount());
-        this.femaleTotal = new LongWritable(marriageCountWritable.getFemaleTotalCount());
-    }
+//    public MarriageCountWritable(MarriageCountWritable marriageCountWritable)
+//    {
+//        this.maleNeverMarried = new LongWritable(marriageCountWritable.getMaleNeverMarriedCount());
+//        this.maleTotal = new LongWritable(marriageCountWritable.getMaleTotalCount());
+//        this.femaleNeverMarried = new LongWritable(marriageCountWritable.getFemaleNeverMarriedCount());
+//        this.femaleTotal = new LongWritable(marriageCountWritable.getFemaleTotalCount());
+//    }
 
     // Getter methods
     public MarriageCountObject getMarriageCountObject()

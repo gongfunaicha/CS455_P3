@@ -34,11 +34,11 @@ public class ResidenceCountWritable implements Writable {
     }
 
     // Copy Constructor
-    public ResidenceCountWritable(ResidenceCountWritable residenceCountWritable)
-    {
-        this.rentCount = new LongWritable(residenceCountWritable.getRentCount());
-        this.ownedCount = new LongWritable(residenceCountWritable.getOwnedCount());
-    }
+//    public ResidenceCountWritable(ResidenceCountWritable residenceCountWritable)
+//    {
+//        this.rentCount = new LongWritable(residenceCountWritable.getRentCount());
+//        this.ownedCount = new LongWritable(residenceCountWritable.getOwnedCount());
+//    }
 
     // Getter methods
     public ResidenceCountObject getResidenceCountObject()
