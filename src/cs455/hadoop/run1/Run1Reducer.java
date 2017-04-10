@@ -1,6 +1,7 @@
 package cs455.hadoop.run1;
 
 import cs455.hadoop.util.objects.AgeDistributionObject;
+import cs455.hadoop.util.objects.HousePositionCountObject;
 import cs455.hadoop.util.objects.MarriageCountObject;
 import cs455.hadoop.util.objects.ResidenceCountObject;
 import cs455.hadoop.util.writable.Run1CombinedWritable;
@@ -39,15 +40,17 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             String state = entry.getKey();
             ArrayList<Run1CombinedWritable> collection = entry.getValue();
 
-            // Generate one Run1CombinedWritable for this collection
+            // Aggregate the counts
             ResidenceCountObject aggregatedResidenceCountObject = ResidenceCountObject.aggregate(collection);
             MarriageCountObject aggregatedMarriageCountObject = MarriageCountObject.aggregate(collection);
             AgeDistributionObject aggregatedAgeDistributionObject = AgeDistributionObject.aggregate(collection);
+            HousePositionCountObject aggregatedHousePositionCountObject = HousePositionCountObject.aggregate(collection);
 
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
             MarriageCountAnalysis(context, state, aggregatedMarriageCountObject);
             AgeDistributionAnalysis(context, state, aggregatedAgeDistributionObject);
+            HousePositionCountAnalysis(context, state, aggregatedHousePositionCountObject);
 
         }
     }
@@ -147,5 +150,35 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(female19_29)));
         context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(female30_39)));
         context.write(new Text(state + " Hispanic female count: "), new Text("\t\t\t\t\t\t" + String.valueOf(femaleTotal)));
+    }
+
+    private void HousePositionCountAnalysis(Context context, String state, HousePositionCountObject housePositionCountObject) throws IOException, InterruptedException
+    {
+        // Get urban, rural, and other counts
+        long urbanCount = housePositionCountObject.getUrbanCount();
+        long ruralCount = housePositionCountObject.getRuralCount();
+        long otherCount = housePositionCountObject.getOtherCount();
+
+        // Calculate total number of households
+        double totalCount = urbanCount + ruralCount + otherCount;
+
+        // Calculate percentage
+        double ruralPercentage = (ruralCount / totalCount) * 100;
+        double urbanPercentage = (urbanCount / totalCount) * 100;
+
+        // Convert into String
+        String stringRuralPercentage = String.format("%.2f", ruralPercentage) + "%";
+        String stringUrbanPercentage = String.format("%.2f", urbanPercentage) + "%";
+
+        // Write to output
+//        context.write(new Text(state + " rural household percentage: "), new Text(stringRuralPercentage));
+//        context.write(new Text(state + " urban household percentage: "), new Text(stringUrbanPercentage));
+
+        // Debug output
+        context.write(new Text(state + " rural household count: "), new Text(String.valueOf(ruralCount)));
+        context.write(new Text(state + " urban household count: "), new Text(String.valueOf(urbanCount)));
+        context.write(new Text(state + " other household count: "), new Text(String.valueOf(otherCount)));
+        context.write(new Text(state + " total household count: "), new Text(String.valueOf(totalCount)));
+
     }
 }

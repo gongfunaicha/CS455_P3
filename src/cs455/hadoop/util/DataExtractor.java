@@ -1,6 +1,7 @@
 package cs455.hadoop.util;
 
 import cs455.hadoop.util.objects.AgeDistributionObject;
+import cs455.hadoop.util.objects.HousePositionCountObject;
 import cs455.hadoop.util.objects.MarriageCountObject;
 import cs455.hadoop.util.objects.ResidenceCountObject;
 
@@ -111,4 +112,22 @@ public class DataExtractor {
 
         return new AgeDistributionObject(male_18, male19_29, male30_39, male40_, female_18, female19_29, female30_39, female40_);
     }
+
+    public static HousePositionCountObject housePositionCountExtractor(String line)
+    {
+        // Index 1822 - 1830 is Urban: Inside urbanized area
+        long urbanCount = Long.parseLong(line.substring(1821, 1830));
+
+        // Index 1831 - 1839 is Urban: Outside urbanized area
+        urbanCount += Long.parseLong(line.substring(1830, 1839));
+
+        // Index 1840 - 1848 is Rural
+        long ruralCount = Long.parseLong(line.substring(1839, 1848));
+
+        // Index 1849 - 1857 is Not defined for this file
+        long otherCount = Long.parseLong(line.substring(1848, 1857));
+
+        return new HousePositionCountObject(urbanCount, ruralCount, otherCount);
+    }
+
 }

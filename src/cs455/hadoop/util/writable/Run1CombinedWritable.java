@@ -1,6 +1,7 @@
 package cs455.hadoop.util.writable;
 
 import cs455.hadoop.util.objects.AgeDistributionObject;
+import cs455.hadoop.util.objects.HousePositionCountObject;
 import cs455.hadoop.util.objects.MarriageCountObject;
 import cs455.hadoop.util.objects.ResidenceCountObject;
 import org.apache.hadoop.io.Text;
@@ -15,21 +16,24 @@ public class Run1CombinedWritable implements Writable{
     private ResidenceCountWritable residenceCountWritable;
     private MarriageCountWritable marriageCountWritable;
     private AgeDistributionCountWritable ageDistributionCountWritable;
+    private HousePositionCountWritable housePositionCountWritable;
 
     public Run1CombinedWritable()
     {
         state = new Text("");
-        residenceCountWritable = new ResidenceCountWritable(0,0);
-        marriageCountWritable = new MarriageCountWritable(0,0,0,0);
-        ageDistributionCountWritable = new AgeDistributionCountWritable(0,0,0,0,0,0,0,0);
+        residenceCountWritable = new ResidenceCountWritable();
+        marriageCountWritable = new MarriageCountWritable();
+        ageDistributionCountWritable = new AgeDistributionCountWritable();
+        housePositionCountWritable = new HousePositionCountWritable();
     }
 
-    public Run1CombinedWritable(String state, ResidenceCountObject residenceCountObject, MarriageCountObject marriageCountObject, AgeDistributionObject ageDistributionObject)
+    public Run1CombinedWritable(String state, ResidenceCountObject residenceCountObject, MarriageCountObject marriageCountObject, AgeDistributionObject ageDistributionObject, HousePositionCountObject housePositionCountObject)
     {
         this.state = new Text(state);
         residenceCountWritable = new ResidenceCountWritable(residenceCountObject);
         marriageCountWritable = new MarriageCountWritable(marriageCountObject);
         ageDistributionCountWritable = new AgeDistributionCountWritable(ageDistributionObject);
+        housePositionCountWritable = new HousePositionCountWritable(housePositionCountObject);
     }
 
     // Copy constructor
@@ -39,6 +43,7 @@ public class Run1CombinedWritable implements Writable{
         residenceCountWritable = new ResidenceCountWritable(run1CombinedWritable.getResidenceCountObject());
         marriageCountWritable = new MarriageCountWritable(run1CombinedWritable.getMarriageCountObject());
         ageDistributionCountWritable = new AgeDistributionCountWritable(run1CombinedWritable.getAgeDistributionObject());
+        housePositionCountWritable = new HousePositionCountWritable(run1CombinedWritable.getHousePositionCountObject());
     }
 
     public AgeDistributionObject getAgeDistributionObject()
@@ -56,6 +61,11 @@ public class Run1CombinedWritable implements Writable{
         return residenceCountWritable.getResidenceCountObject();
     }
 
+    public HousePositionCountObject getHousePositionCountObject()
+    {
+        return housePositionCountWritable.getHousePositionCountObject();
+    }
+
     public String getState()
     {
         return state.toString();
@@ -68,6 +78,7 @@ public class Run1CombinedWritable implements Writable{
         residenceCountWritable.readFields(dataInput);
         marriageCountWritable.readFields(dataInput);
         ageDistributionCountWritable.readFields(dataInput);
+        housePositionCountWritable.readFields(dataInput);
     }
 
     // Write in question order, state first
@@ -77,5 +88,6 @@ public class Run1CombinedWritable implements Writable{
         residenceCountWritable.write(dataOutput);
         marriageCountWritable.write(dataOutput);
         ageDistributionCountWritable.write(dataOutput);
+        housePositionCountWritable.write(dataOutput);
     }
 }

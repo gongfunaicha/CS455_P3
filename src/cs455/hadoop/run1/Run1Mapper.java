@@ -2,6 +2,7 @@ package cs455.hadoop.run1;
 
 import cs455.hadoop.util.DataExtractor;
 import cs455.hadoop.util.objects.AgeDistributionObject;
+import cs455.hadoop.util.objects.HousePositionCountObject;
 import cs455.hadoop.util.objects.MarriageCountObject;
 import cs455.hadoop.util.objects.ResidenceCountObject;
 import cs455.hadoop.util.writable.Run1CombinedWritable;
@@ -21,6 +22,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         ResidenceCountObject residenceCountObject = null;
         MarriageCountObject marriageCountObject = null;
         AgeDistributionObject ageDistributionObject = null;
+        HousePositionCountObject housePositionCountObject = null;
 
         // Convert value into string
         String line = value.toString();
@@ -44,6 +46,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
 
             // First initialize other objects with empty constructor
             residenceCountObject = new ResidenceCountObject();
+            housePositionCountObject = new HousePositionCountObject();
 
             // Extract data from line
             marriageCountObject = DataExtractor.marriageCountExtractor(line);
@@ -51,7 +54,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         }
         else if (logicalRecordPartNumber == 2)
         {
-            // Using part 2 we can solve question 1
+            // Using part 2 we can solve question 1 and 4
 
             // First initialize other objects with empty constructor
             marriageCountObject = new MarriageCountObject();
@@ -59,6 +62,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
 
             // Extract data from line
             residenceCountObject = DataExtractor.residenceCountExtractor(line);
+            housePositionCountObject = DataExtractor.housePositionCountExtractor(line);
         }
         else
         {
@@ -67,7 +71,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         }
 
         // Emit dummykey + Run1CombinedWritable pair
-        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject));
+        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject, housePositionCountObject));
 
     }
 }

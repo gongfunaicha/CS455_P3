@@ -25,8 +25,19 @@ public class HousePositionCountObject {
 
     public static HousePositionCountObject aggregate(ArrayList<Run1CombinedWritable> collection)
     {
-        // TODO: Implement aggregate method
-        return null;
+        long urbanCount = 0;
+        long ruralCount = 0;
+        long otherCount = 0;
+
+        for (Run1CombinedWritable val: collection)
+        {
+            HousePositionCountObject housePositionCountObject = val.getHousePositionCountObject();
+            urbanCount += housePositionCountObject.getUrbanCount();
+            ruralCount += housePositionCountObject.getRuralCount();
+            otherCount += housePositionCountObject.getOtherCount();
+        }
+
+        return new HousePositionCountObject(urbanCount, ruralCount, otherCount);
     }
 
     public long getUrbanCount()
