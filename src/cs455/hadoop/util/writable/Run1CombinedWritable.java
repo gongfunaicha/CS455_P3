@@ -32,6 +32,15 @@ public class Run1CombinedWritable implements Writable{
         ageDistributionCountWritable = new AgeDistributionCountWritable(ageDistributionObject);
     }
 
+    // Copy constructor
+    public Run1CombinedWritable(Run1CombinedWritable run1CombinedWritable)
+    {
+        this.state = new Text(run1CombinedWritable.getState());
+        residenceCountWritable = new ResidenceCountWritable(run1CombinedWritable.getResidenceCountObject());
+        marriageCountWritable = new MarriageCountWritable(run1CombinedWritable.getMarriageCountObject());
+        ageDistributionCountWritable = new AgeDistributionCountWritable(run1CombinedWritable.getAgeDistributionObject());
+    }
+
     public AgeDistributionObject getAgeDistributionObject()
     {
         return ageDistributionCountWritable.getAgeDistributionObject();
@@ -52,17 +61,19 @@ public class Run1CombinedWritable implements Writable{
         return state.toString();
     }
 
-    // Read in question order
+    // Read in question order, state first
     @Override
     public void readFields(DataInput dataInput) throws IOException {
+        state.readFields(dataInput);
         residenceCountWritable.readFields(dataInput);
         marriageCountWritable.readFields(dataInput);
         ageDistributionCountWritable.readFields(dataInput);
     }
 
-    // Write in question order
+    // Write in question order, state first
     @Override
     public void write(DataOutput dataOutput) throws IOException {
+        state.write(dataOutput);
         residenceCountWritable.write(dataOutput);
         marriageCountWritable.write(dataOutput);
         ageDistributionCountWritable.write(dataOutput);

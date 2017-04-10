@@ -28,8 +28,8 @@ public class Run1Combiner extends Reducer<Text, Run1CombinedWritable, Text, Run1
                 groupByState.put(state, new ArrayList<>());
             }
 
-            // Put val into corresponding ArrayList
-            groupByState.get(state).add(val);
+            // Deep copy val into corresponding ArrayList
+            groupByState.get(state).add(new Run1CombinedWritable(val));
         }
 
         // Iterator through the groupByState, emit one Run1CombinedWritable for each state

@@ -29,8 +29,8 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
                 groupByState.put(state, new ArrayList<>());
             }
 
-            // Put val into corresponding ArrayList
-            groupByState.get(state).add(val);
+            // Deep copy val into corresponding ArrayList
+            groupByState.get(state).add(new Run1CombinedWritable(val));
         }
 
         // Iterator through the groupByState, emit one Run1CombinedWritable for each state
@@ -46,6 +46,8 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
+            MarriageCountAnalysis(context, state, aggregatedMarriageCountObject);
+            AgeDistributionAnalysis(context, state, aggregatedAgeDistributionObject);
 
         }
     }
@@ -65,10 +67,10 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         String strOwnedPercentage = String.format("%.2f", ownedPercentage) + "%";
 
         // Write to output
-        context.write(new Text(state + " rented percentage: "), new Text(strRentPercentage));
-        context.write(new Text(state + " owned percentage: "), new Text(strOwnedPercentage));
-//        context.write(new Text(state + " rented count: "), new Text(String.valueOf(rentCount)));
-//        context.write(new Text(state + " owned count: "), new Text(String.valueOf(ownedCount)));
+//        context.write(new Text(state + " rented percentage: "), new Text(strRentPercentage));
+//        context.write(new Text(state + " owned percentage: "), new Text(strOwnedPercentage));
+        context.write(new Text(state + " rented count: "), new Text(String.valueOf(rentCount)));
+        context.write(new Text(state + " owned count: "), new Text(String.valueOf(ownedCount)));
     }
 
     private void MarriageCountAnalysis(Context context, String state, MarriageCountObject marriageCountObject) throws IOException, InterruptedException
@@ -87,12 +89,12 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         String strFemaleNeverMarriedPercentage = String.format("%.2f", femaleNeverMarriedPercentage) + "%";
 
         // Write to output
-        context.write(new Text(state + " male never married percentage: "), new Text(strMaleNeverMarriedPercentage));
-        context.write(new Text(state + " female never married percentage: "), new Text(strFemaleNeverMarriedPercentage));
-//        context.write(new Text(state + " male never married count: "), new Text(String.valueOf(maleNeverMarried)));
-//        context.write(new Text(state + " total male population: "), new Text(String.valueOf(maleTotal)));
-//        context.write(new Text(state + " female never married count: "), new Text(String.valueOf(femaleNeverMarried)));
-//        context.write(new Text(state + " total female population: "), new Text(String.valueOf(femaleTotal)));
+//        context.write(new Text(state + " male never married percentage: "), new Text(strMaleNeverMarriedPercentage));
+//        context.write(new Text(state + " female never married percentage: "), new Text(strFemaleNeverMarriedPercentage));
+        context.write(new Text(state + " male never married count: "), new Text(String.valueOf(maleNeverMarried)));
+        context.write(new Text(state + " total male population: "), new Text(String.valueOf(maleTotal)));
+        context.write(new Text(state + " female never married count: "), new Text(String.valueOf(femaleNeverMarried)));
+        context.write(new Text(state + " total female population: "), new Text(String.valueOf(femaleTotal)));
     }
 
     private void AgeDistributionAnalysis(Context context, String state, AgeDistributionObject ageDistributionObject) throws IOException, InterruptedException
@@ -129,21 +131,21 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 
 
         // Write to output
-        context.write(new Text(state + " Hispanic male below 18 years (inclusive) old percentage: "), new Text("\t\t\t" + stringMale_18Percentage));
-        context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringMale19_29Percentage));
-        context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringMale30_39Percentage));
-        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old percentage: "), new Text("\t\t" + stringFemale_18Percentage));
-        context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringFemale19_29Percentage));
-        context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringFemale30_39Percentage));
+//        context.write(new Text(state + " Hispanic male below 18 years (inclusive) old percentage: "), new Text("\t\t\t" + stringMale_18Percentage));
+//        context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringMale19_29Percentage));
+//        context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringMale30_39Percentage));
+//        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old percentage: "), new Text("\t\t" + stringFemale_18Percentage));
+//        context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringFemale19_29Percentage));
+//        context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringFemale30_39Percentage));
 
         // Debug output
-//        context.write(new Text(state + " Hispanic male below 18 years (inclusive) old count: "), new Text("\t\t\t" + String.valueOf(male_18)));
-//        context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(male19_29)));
-//        context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(male30_39)));
-//        context.write(new Text(state + " Hispanic male count: "), new Text("\t\t\t\t\t\t" + String.valueOf(maleTotal)));
-//        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old count: "), new Text("\t\t" + String.valueOf(female_18)));
-//        context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(female19_29)));
-//        context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(female30_39)));
-//        context.write(new Text(state + " Hispanic female count: "), new Text("\t\t\t\t\t\t" + String.valueOf(femaleTotal)));
+        context.write(new Text(state + " Hispanic male below 18 years (inclusive) old count: "), new Text("\t\t\t" + String.valueOf(male_18)));
+        context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(male19_29)));
+        context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(male30_39)));
+        context.write(new Text(state + " Hispanic male count: "), new Text("\t\t\t\t\t\t" + String.valueOf(maleTotal)));
+        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old count: "), new Text("\t\t" + String.valueOf(female_18)));
+        context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(female19_29)));
+        context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(female30_39)));
+        context.write(new Text(state + " Hispanic female count: "), new Text("\t\t\t\t\t\t" + String.valueOf(femaleTotal)));
     }
 }

@@ -57,6 +57,19 @@ public class AgeDistributionCountWritable implements Writable {
         this.female40_ = new LongWritable(ageDistributionObject.getFemale40_());
     }
 
+    // Constructor
+    public AgeDistributionCountWritable(AgeDistributionCountWritable ageDistributionCountWritable)
+    {
+        this.male_18 = new LongWritable(ageDistributionCountWritable.getMale_18());
+        this.male19_29 = new LongWritable(ageDistributionCountWritable.getMale19_29());
+        this.male30_39 = new LongWritable(ageDistributionCountWritable.getMale30_39());
+        this.male40_ = new LongWritable(ageDistributionCountWritable.getMale40_());
+        this.female_18 = new LongWritable(ageDistributionCountWritable.getFemale_18());
+        this.female19_29 = new LongWritable(ageDistributionCountWritable.getFemale19_29());
+        this.female30_39 = new LongWritable(ageDistributionCountWritable.getFemale30_39());
+        this.female40_ = new LongWritable(ageDistributionCountWritable.getFemale40_());
+    }
+
     // Getter methods
     public AgeDistributionObject getAgeDistributionObject()
     {
