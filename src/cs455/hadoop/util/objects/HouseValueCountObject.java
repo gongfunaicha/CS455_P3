@@ -40,8 +40,25 @@ public class HouseValueCountObject {
 
     public static HouseValueCountObject aggregate(ArrayList<Run1CombinedWritable> collection)
     {
-        // TODO: Implement aggregate function
-        return null;
+        long[] valueArray = new long[20];
+
+        // Initialize with all 0
+        for (int i = 0; i < 20; i++)
+        {
+            valueArray[i] = 0;
+        }
+
+        // Iterate through the collection and add to valueArray
+        for (Run1CombinedWritable val: collection)
+        {
+            long[] tempValueArray = val.getHouseValueCountObject().getValueArray();
+            for (int i = 0; i < 20; i++)
+            {
+                valueArray[i] += tempValueArray[i];
+            }
+        }
+
+        return new HouseValueCountObject(valueArray);
     }
 
     // Getter return deep copy of array for safety

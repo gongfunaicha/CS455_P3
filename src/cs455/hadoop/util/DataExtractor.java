@@ -1,9 +1,6 @@
 package cs455.hadoop.util;
 
-import cs455.hadoop.util.objects.AgeDistributionObject;
-import cs455.hadoop.util.objects.HousePositionCountObject;
-import cs455.hadoop.util.objects.MarriageCountObject;
-import cs455.hadoop.util.objects.ResidenceCountObject;
+import cs455.hadoop.util.objects.*;
 
 // Class providing data extraction static methods of all kinds of data
 // Precondition: the line in the right partition
@@ -129,5 +126,20 @@ public class DataExtractor {
 
         return new HousePositionCountObject(urbanCount, ruralCount, otherCount);
     }
+
+    public static HouseValueCountObject houseValueCountExtractor(String line)
+    {
+        // Count by value storage
+        long[] valueArray = new long[20];
+
+        // Starting from index 2929, there are 20 categories for count by value
+        for (int i = 0; i < 20; i++)
+        {
+            valueArray[i] = Long.parseLong(line.substring(2928 + 9 * i, 2937 + 9 * i));
+        }
+
+        return new HouseValueCountObject(valueArray);
+    }
+
 
 }

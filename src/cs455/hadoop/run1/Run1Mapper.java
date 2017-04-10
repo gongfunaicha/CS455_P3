@@ -62,7 +62,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
             // Extract data from line
             residenceCountObject = DataExtractor.residenceCountExtractor(line);
             housePositionCountObject = DataExtractor.housePositionCountExtractor(line);
-            // TODO: Extract data for house value count object
+            houseValueCountObject = DataExtractor.houseValueCountExtractor(line);
         }
         else
         {
