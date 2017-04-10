@@ -27,16 +27,16 @@ public class Run1Job {
             job.setMapperClass(Run1Mapper.class);
             // Combiner class
             job.setCombinerClass(Run1Combiner.class);
-            // TODO: Reducer class
-//            job.setReducerClass(ResidenceTypeReducer.class);
+            // Reducer class
+            job.setReducerClass(Run1Reducer.class);
             // Set map output key class
             job.setMapOutputKeyClass(Text.class);
             // Set map output value class
             job.setMapOutputValueClass(Run1CombinedWritable.class);
-            // TODO: Set output key class
-//            job.setOutputKeyClass(Text.class);
-            // TODO: Set output value class
-//            job.setOutputValueClass(Text.class);
+            // Set output key class
+            job.setOutputKeyClass(Text.class);
+            // Set output value class
+            job.setOutputValueClass(Text.class);
             // Add input path
             FileInputFormat.addInputPath(job, new Path(args[0]));
             // Set output path
