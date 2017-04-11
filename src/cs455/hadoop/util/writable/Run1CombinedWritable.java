@@ -15,6 +15,7 @@ public class Run1CombinedWritable implements Writable{
     private AgeDistributionCountWritable ageDistributionCountWritable;
     private HousePositionCountWritable housePositionCountWritable;
     private HouseValueCountWritable houseValueCountWritable;
+    private RentCountWritable rentCountWritable;
     private RoomCountWritable roomCountWritable;
 
     public Run1CombinedWritable()
@@ -25,10 +26,11 @@ public class Run1CombinedWritable implements Writable{
         ageDistributionCountWritable = new AgeDistributionCountWritable();
         housePositionCountWritable = new HousePositionCountWritable();
         houseValueCountWritable = new HouseValueCountWritable();
+        rentCountWritable = new RentCountWritable();
         roomCountWritable = new RoomCountWritable();
     }
 
-    public Run1CombinedWritable(String state, ResidenceCountObject residenceCountObject, MarriageCountObject marriageCountObject, AgeDistributionObject ageDistributionObject, HousePositionCountObject housePositionCountObject, HouseValueCountObject houseValueCountObject, RoomCountObject roomCountObject)
+    public Run1CombinedWritable(String state, ResidenceCountObject residenceCountObject, MarriageCountObject marriageCountObject, AgeDistributionObject ageDistributionObject, HousePositionCountObject housePositionCountObject, HouseValueCountObject houseValueCountObject, RentCountObject rentCountObject, RoomCountObject roomCountObject)
     {
         this.state = new Text(state);
         residenceCountWritable = new ResidenceCountWritable(residenceCountObject);
@@ -36,6 +38,7 @@ public class Run1CombinedWritable implements Writable{
         ageDistributionCountWritable = new AgeDistributionCountWritable(ageDistributionObject);
         housePositionCountWritable = new HousePositionCountWritable(housePositionCountObject);
         houseValueCountWritable = new HouseValueCountWritable(houseValueCountObject);
+        rentCountWritable = new RentCountWritable(rentCountObject);
         roomCountWritable = new RoomCountWritable(roomCountObject);
     }
 
@@ -48,6 +51,7 @@ public class Run1CombinedWritable implements Writable{
         ageDistributionCountWritable = new AgeDistributionCountWritable(run1CombinedWritable.getAgeDistributionObject());
         housePositionCountWritable = new HousePositionCountWritable(run1CombinedWritable.getHousePositionCountObject());
         houseValueCountWritable = new HouseValueCountWritable(run1CombinedWritable.getHouseValueCountObject());
+        rentCountWritable = new RentCountWritable(run1CombinedWritable.getRentCountObject());
         roomCountWritable = new RoomCountWritable(run1CombinedWritable.getRoomCountObject());
     }
 
@@ -76,6 +80,11 @@ public class Run1CombinedWritable implements Writable{
         return houseValueCountWritable.getHouseValueCountObject();
     }
 
+    public RentCountObject getRentCountObject()
+    {
+        return rentCountWritable.getRentCountObject();
+    }
+
     public RoomCountObject getRoomCountObject()
     {
         return roomCountWritable.getRoomCountObject();
@@ -95,6 +104,7 @@ public class Run1CombinedWritable implements Writable{
         ageDistributionCountWritable.readFields(dataInput);
         housePositionCountWritable.readFields(dataInput);
         houseValueCountWritable.readFields(dataInput);
+        rentCountWritable.readFields(dataInput);
         roomCountWritable.readFields(dataInput);
     }
 
@@ -107,6 +117,7 @@ public class Run1CombinedWritable implements Writable{
         ageDistributionCountWritable.write(dataOutput);
         housePositionCountWritable.write(dataOutput);
         houseValueCountWritable.write(dataOutput);
+        rentCountWritable.write(dataOutput);
         roomCountWritable.write(dataOutput);
     }
 }
