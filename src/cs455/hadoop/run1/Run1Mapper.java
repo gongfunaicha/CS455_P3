@@ -21,6 +21,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         AgeDistributionObject ageDistributionObject = null;
         HousePositionCountObject housePositionCountObject = null;
         HouseValueCountObject houseValueCountObject = null;
+        RoomCountObject roomCountObject = null;
 
         // Convert value into string
         String line = value.toString();
@@ -46,6 +47,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
             residenceCountObject = new ResidenceCountObject();
             housePositionCountObject = new HousePositionCountObject();
             houseValueCountObject = new HouseValueCountObject();
+            roomCountObject = new RoomCountObject();
 
             // Extract data from line
             marriageCountObject = DataExtractor.marriageCountExtractor(line);
@@ -53,7 +55,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         }
         else if (logicalRecordPartNumber == 2)
         {
-            // Using part 2 we can solve question 1, 4, and 5
+            // Using part 2 we can solve question 1, 4, 5, and 7
 
             // First initialize other objects with empty constructor
             marriageCountObject = new MarriageCountObject();
@@ -63,6 +65,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
             residenceCountObject = DataExtractor.residenceCountExtractor(line);
             housePositionCountObject = DataExtractor.housePositionCountExtractor(line);
             houseValueCountObject = DataExtractor.houseValueCountExtractor(line);
+            roomCountObject = DataExtractor.roomCountExtractor(line);
         }
         else
         {
@@ -71,7 +74,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         }
 
         // Emit dummykey + Run1CombinedWritable pair
-        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject, housePositionCountObject, houseValueCountObject));
+        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject, housePositionCountObject, houseValueCountObject, roomCountObject));
 
     }
 }

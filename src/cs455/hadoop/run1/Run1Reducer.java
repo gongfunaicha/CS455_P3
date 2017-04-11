@@ -31,6 +31,9 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             groupByState.get(state).add(new Run1CombinedWritable(val));
         }
 
+        // ArrayList of RoomCountObject, used for aggregate among states
+        ArrayList<RoomCountObject> collectionOfRoomCount = new ArrayList<>();
+
         // Iterator through the groupByState, emit one Run1CombinedWritable for each state
         for (Map.Entry<String, ArrayList<Run1CombinedWritable>> entry : groupByState.entrySet())
         {
@@ -43,7 +46,10 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             AgeDistributionObject aggregatedAgeDistributionObject = AgeDistributionObject.aggregate(collection);
             HousePositionCountObject aggregatedHousePositionCountObject = HousePositionCountObject.aggregate(collection);
             HouseValueCountObject aggregatedHouseValueCountObject = HouseValueCountObject.aggregate(collection);
+            RoomCountObject aggregatedRoomCountObject = RoomCountObject.aggregate(collection);
 
+            // Add RoomCountObject into collection of room count
+            collectionOfRoomCount.add(aggregatedRoomCountObject);
 
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
@@ -53,6 +59,11 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             HouseValueCountAnalysis(context, state, aggregatedHouseValueCountObject);
 
         }
+
+        // Perform across state level aggregation and analysis
+        RoomCountObject totalRoomCountObject = RoomCountObject.aggregateByState(collectionOfRoomCount);
+        RoomCountAnalysis(context, totalRoomCountObject);
+
     }
 
     private void ResidenceCountAnalysis(Context context, String state, ResidenceCountObject residenceCountObject) throws IOException, InterruptedException
@@ -417,6 +428,48 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             }
             context.write(new Text(state + " " + outputCate + " house values: "), new Text(String.valueOf(valueArray[j])));
         }
+    }
+
+    private void RoomCountAnalysis(Context context, RoomCountObject roomCountObject) throws IOException, InterruptedException
+    {
+        // Get room count
+        long[] countArray = roomCountObject.getCountArray();
+
+        // Calculate the total number of houses
+        long totalCount = 0;
+        for (int i = 0; i < 9; i++)
+        {
+            totalCount += countArray[i];
+        }
+
+        // Handle the case that total count is 0
+        if (totalCount == 0)
+        {
+            context.write(new Text("US"), new Text(" does not contain any houses."));
+            return;
+        }
+
+        // Get the 95 percentile count
+        long percentileCount = (long)(totalCount * 0.95);
+
+        // Loop until current count is larger than 95 percentileCount
+        long currentCount = 0;
+        int i  = 0;
+        for (i = 0; i < 9; i++)
+        {
+            if (currentCount > percentileCount)
+                break;
+            currentCount += countArray[i];
+        }
+        // Write to output
+        context.write(new Text("95th percentile of the average number of rooms per house across all states is: "), new Text(String.valueOf(i)));
+
+        // Debug output
+        for (int j = 0; j < 9; j++)
+        {
+            context.write(new Text("US " + String.valueOf(j + 1)+ " room houses: "), new Text(String.valueOf(countArray[j])));
+        }
 
     }
+
 }

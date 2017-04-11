@@ -42,9 +42,10 @@ public class Run1Combiner extends Reducer<Text, Run1CombinedWritable, Text, Run1
             AgeDistributionObject aggregatedAgeDistributionObject = AgeDistributionObject.aggregate(collection);
             HousePositionCountObject aggregatedHousePositionCountObject = HousePositionCountObject.aggregate(collection);
             HouseValueCountObject aggregatedHouseValueCountObject = HouseValueCountObject.aggregate(collection);
+            RoomCountObject aggregatedRoomCountObject = RoomCountObject.aggregate(collection);
 
             // Emit aggregated Run1CombinedWritable
-            context.write(new Text("1"), new Run1CombinedWritable(state, aggregatedResidenceCountObject, aggregatedMarriageCountObject, aggregatedAgeDistributionObject, aggregatedHousePositionCountObject, aggregatedHouseValueCountObject));
+            context.write(new Text("1"), new Run1CombinedWritable(state, aggregatedResidenceCountObject, aggregatedMarriageCountObject, aggregatedAgeDistributionObject, aggregatedHousePositionCountObject, aggregatedHouseValueCountObject, aggregatedRoomCountObject));
         }
     }
 }

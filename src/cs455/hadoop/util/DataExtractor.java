@@ -141,5 +141,20 @@ public class DataExtractor {
         return new HouseValueCountObject(valueArray);
     }
 
+    public static RoomCountObject roomCountExtractor(String line)
+    {
+        // Count by value storage
+        long[] valueArray = new long[9];
+
+        // Starting from index 2389, there are 9 categories for count by value
+        for (int i = 0; i < 9; i++)
+        {
+            valueArray[i] = Long.parseLong(line.substring(2388 + 9 * i, 2397 + 9 * i));
+        }
+
+        return new RoomCountObject(valueArray);
+    }
+
+
 
 }
