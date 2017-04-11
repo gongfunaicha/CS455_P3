@@ -182,7 +182,4 @@ public class DataExtractor {
 
         return new ElderCountObject(elderCount, totalCount);
     }
-
-
-
 }

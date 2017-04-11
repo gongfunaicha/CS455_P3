@@ -7,6 +7,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -34,7 +35,10 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // ArrayList of RoomCountObject, used for aggregate among states
         ArrayList<RoomCountObject> collectionOfRoomCount = new ArrayList<>();
 
-        // Iterator through the groupByState, emit one Run1CombinedWritable for each state
+        // HashMap of State to elderly people percentage
+        HashMap<String, Double> elderlyPeoplePercentageByState = new HashMap<>();
+
+        // Iterator through the groupByState
         for (Map.Entry<String, ArrayList<Run1CombinedWritable>> entry : groupByState.entrySet())
         {
             String state = entry.getKey();
@@ -61,11 +65,15 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             HouseValueCountAnalysis(context, state, aggregatedHouseValueCountObject);
             RentCountAnalysis(context, state, aggregatedRentCountObject);
 
+            // Update hashmap of elderly people percentage by state
+            PopulateElderlyPeoplePercentageByState(state, aggregatedElderCountObject, elderlyPeoplePercentageByState);
+
         }
 
         // Perform across state level aggregation and analysis
         RoomCountObject totalRoomCountObject = RoomCountObject.aggregateByState(collectionOfRoomCount);
         RoomCountAnalysis(context, totalRoomCountObject);
+        ElderlyPeoplePercentageAnalysis(context, elderlyPeoplePercentageByState);
 
     }
 
@@ -628,6 +636,42 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             context.write(new Text("US " + String.valueOf(j + 1)+ " room houses: "), new Text(String.valueOf(countArray[j])));
         }
 
+    }
+
+    // Calculate elder people percentage and put into hashmap
+    private void PopulateElderlyPeoplePercentageByState(String state, ElderCountObject elderCountObject, HashMap<String, Double> elderlyPeoplePercentageByState)
+    {
+        long elderCount = elderCountObject.getElderCount();
+        long totalCount = elderCountObject.getTotalCount();
+
+        // Ignore if there is no people in that state
+        if (totalCount != 0)
+        {
+            double elderPercentage = (elderCount/(double)totalCount) * 100;
+            elderlyPeoplePercentageByState.put(state, elderPercentage);
+        }
+    }
+
+    private void ElderlyPeoplePercentageAnalysis(Context context, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException
+    {
+        // Real elder people percentage should always be >= 0%
+        double highestElderPeoplePercentage = -100;
+        String highestPercentageState = "";
+
+        for (Map.Entry<String, Double> entry: elderlyPeoplePercentageByState.entrySet())
+        {
+            String currentState = entry.getKey();
+            double currentPercentage = entry.getValue();
+
+            if (currentPercentage > highestElderPeoplePercentage)
+            {
+                highestElderPeoplePercentage = currentPercentage;
+                highestPercentageState = currentState;
+            }
+        }
+
+        String stringHighestElderPeoplePercentage = String.format("%.2f", highestElderPeoplePercentage) + "%";
+        context.write(new Text(highestPercentageState + " has the highest percentage of elderly people: "), new Text(stringHighestElderPeoplePercentage));
     }
 
 }
