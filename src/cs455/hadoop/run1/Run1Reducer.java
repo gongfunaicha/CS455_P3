@@ -7,6 +7,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -34,6 +35,9 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // ArrayList of RoomCountObject, used for aggregate among states
         ArrayList<RoomCountObject> collectionOfRoomCount = new ArrayList<>();
 
+        // HashMap of State to elderly people percentage
+        HashMap<String, Double> elderlyPeoplePercentageByState = new HashMap<>();
+
         // Iterator through the groupByState, emit one Run1CombinedWritable for each state
         for (Map.Entry<String, ArrayList<Run1CombinedWritable>> entry : groupByState.entrySet())
         {
@@ -55,7 +59,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
             MarriageCountAnalysis(context, state, aggregatedMarriageCountObject);
-            AgeDistributionAnalysis(context, state, aggregatedAgeDistributionObject);
+            AgeDistributionAnalysis(context, state, aggregatedAgeDistributionObject, elderlyPeoplePercentageByState);
             HousePositionCountAnalysis(context, state, aggregatedHousePositionCountObject);
             HouseValueCountAnalysis(context, state, aggregatedHouseValueCountObject);
             RentCountAnalysis(context, state, aggregatedRentCountObject);
@@ -65,6 +69,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Perform across state level aggregation and analysis
         RoomCountObject totalRoomCountObject = RoomCountObject.aggregateByState(collectionOfRoomCount);
         RoomCountAnalysis(context, totalRoomCountObject);
+        ElderlyPeoplePercentageAnalysis(context, elderlyPeoplePercentageByState);
 
     }
 
@@ -144,21 +149,23 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " total female population: "), new Text(String.valueOf(femaleTotal)));
     }
 
-    private void AgeDistributionAnalysis(Context context, String state, AgeDistributionObject ageDistributionObject) throws IOException, InterruptedException
+    private void AgeDistributionAnalysis(Context context, String state, AgeDistributionObject ageDistributionObject, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException
     {
         // Get male and female count
         long male_18 = ageDistributionObject.getMale_18();
         long male19_29 = ageDistributionObject.getMale19_29();
         long male30_39 = ageDistributionObject.getMale30_39();
-        long male40_ = ageDistributionObject.getMale40_();
+        long male40_84 = ageDistributionObject.getMale40_84();
+        long male85_ = ageDistributionObject.getMale85_();
         long female_18 = ageDistributionObject.getFemale_18();
         long female19_29 = ageDistributionObject.getFemale19_29();
         long female30_39 = ageDistributionObject.getFemale30_39();
-        long female40_ = ageDistributionObject.getFemale40_();
+        long female40_84 = ageDistributionObject.getFemale40_84();
+        long female85_ = ageDistributionObject.getFemale85_();
 
         // Calculate total number of males
-        double maleTotal = male_18 + male19_29 + male30_39 + male40_;
-        double femaleTotal = female_18 + female19_29 + female30_39 + female40_;
+        double maleTotal = male_18 + male19_29 + male30_39 + male40_84 + male85_;
+        double femaleTotal = female_18 + female19_29 + female30_39 + female40_84 + female85_;
 
         // Calculate percentage
         double male_18Percentage;
@@ -219,6 +226,12 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(female19_29)));
         context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(female30_39)));
         context.write(new Text(state + " Hispanic female count: "), new Text("\t\t\t\t\t\t" + String.valueOf(femaleTotal)));
+
+        // Calculate elderly people percentage and put into hashmap
+        long elderlyPeopleCount = male85_ + female85_;
+        double totalCount = femaleTotal + maleTotal;
+        double elderlyPeoplePercentage = (elderlyPeopleCount / totalCount) * 100;
+        elderlyPeoplePercentageByState.put(state, elderlyPeoplePercentage);
     }
 
     private void HousePositionCountAnalysis(Context context, String state, HousePositionCountObject housePositionCountObject) throws IOException, InterruptedException
@@ -627,6 +640,27 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             context.write(new Text("US " + String.valueOf(j + 1)+ " room houses: "), new Text(String.valueOf(countArray[j])));
         }
 
+    }
+
+    private void ElderlyPeoplePercentageAnalysis(Context context, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException
+    {
+        double highestElderPeoplePercentage = -100;
+        String highestPercentageState = "";
+
+        for (Map.Entry<String, Double> entry: elderlyPeoplePercentageByState.entrySet())
+        {
+            String currentState = entry.getKey();
+            double currentPercentage = entry.getValue();
+
+            if (currentPercentage > highestElderPeoplePercentage)
+            {
+                highestElderPeoplePercentage = currentPercentage;
+                highestPercentageState = currentState;
+            }
+        }
+
+        String stringHighestElderPeoplePercentage = String.format("%.2f", highestElderPeoplePercentage) + "%";
+        context.write(new Text(highestPercentageState + " has the highest percentage of elderly people: "), new Text(stringHighestElderPeoplePercentage));
     }
 
 }
