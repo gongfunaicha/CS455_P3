@@ -169,6 +169,20 @@ public class DataExtractor {
         return new RoomCountObject(valueArray);
     }
 
+    public static ElderCountObject elderCountExtractor(String line)
+    {
+        // Index 1066 - 1074 is 85 years and over
+        long elderCount = Long.parseLong(line.substring(1065, 1074));
+
+        // Index 364 - 372 is Male
+        long totalCount = Long.parseLong(line.substring(363, 372));
+
+        // Index 373 - 381 is Female
+        totalCount += Long.parseLong(line.substring(372, 381));
+
+        return new ElderCountObject(elderCount, totalCount);
+    }
+
 
 
 }

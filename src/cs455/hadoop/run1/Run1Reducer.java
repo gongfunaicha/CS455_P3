@@ -48,6 +48,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             HouseValueCountObject aggregatedHouseValueCountObject = HouseValueCountObject.aggregate(collection);
             RentCountObject aggregatedRentCountObject = RentCountObject.aggregate(collection);
             RoomCountObject aggregatedRoomCountObject = RoomCountObject.aggregate(collection);
+            ElderCountObject aggregatedElderCountObject = ElderCountObject.aggregate(collection);
 
             // Add RoomCountObject into collection of room count
             collectionOfRoomCount.add(aggregatedRoomCountObject);
