@@ -85,6 +85,7 @@ public class Run1CombinedWritable implements Writable{
         marriageCountWritable.readFields(dataInput);
         ageDistributionCountWritable.readFields(dataInput);
         housePositionCountWritable.readFields(dataInput);
+        houseValueCountWritable.readFields(dataInput);
     }
 
     // Write in question order, state first
@@ -95,5 +96,6 @@ public class Run1CombinedWritable implements Writable{
         marriageCountWritable.write(dataOutput);
         ageDistributionCountWritable.write(dataOutput);
         housePositionCountWritable.write(dataOutput);
+        houseValueCountWritable.write(dataOutput);
     }
 }
