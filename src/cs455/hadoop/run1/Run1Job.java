@@ -19,7 +19,7 @@ public class Run1Job {
             Configuration conf = new Configuration();
 
             // "Residence Type" will be the job title show in yarn
-            Job job = Job.getInstance(conf, "Residence Type");
+            Job job = Job.getInstance(conf, "CS455 HW3 RUN1");
 
             // Current class
             job.setJarByClass(Run1Job.class);
