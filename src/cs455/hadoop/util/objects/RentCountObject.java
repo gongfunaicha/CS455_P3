@@ -4,7 +4,7 @@ import cs455.hadoop.util.writable.Run1CombinedWritable;
 
 import java.util.ArrayList;
 
-// Used to count the number of houses wihtin each rent
+// Used to count the number of houses within each rent
 public class RentCountObject {
     // Used to store count of houses within each value, 20 values intervals in total
     private long[] valueArray = new long[17];
