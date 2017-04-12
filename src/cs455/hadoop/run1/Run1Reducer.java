@@ -679,10 +679,14 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             weightedHouseCount += countArray[i] * (i+1);
         }
 
-        double avgRoom = weightedHouseCount / totalHouseCount;
+        // Ignore if no house in the state
+        if (totalHouseCount != 0)
+        {
+            double avgRoom = weightedHouseCount / totalHouseCount;
 
-        // Add into avgNumRoom
-        avgNumRoom.add(avgRoom);
+            // Add into avgNumRoom
+            avgNumRoom.add(avgRoom);
+        }
     }
 
     private void PercentileAvgNumRoomAnalysis(Context context, ArrayList<Double> avgNumRoom) throws IOException, InterruptedException
