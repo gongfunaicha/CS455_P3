@@ -61,7 +61,6 @@ public class RenterAgeDistributionObject {
         return new RenterAgeDistributionObject(countArray);
     }
 
-    // Not used anymore
     public static RenterAgeDistributionObject aggregateByState(ArrayList<RenterAgeDistributionObject> collection)
     {
         long[] countArray = new long[7];

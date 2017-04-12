@@ -41,8 +41,6 @@ public class AgeCountPair implements Comparable<AgeCountPair>{
     }
 
     // Comparator
-
-
     @Override
     public int compareTo(AgeCountPair ageCountPair) {
         long countCompare = ageCountPair.getCount();
