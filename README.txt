@@ -6,6 +6,7 @@ use "ant" command to compile
 
 Sample execution command:
 $HADOOP_HOME/bin/hadoop jar dist/CS455_HW3.jar cs455.hadoop.run1.Run1Job /data/census /home/output
+python VisualAnalysis.py <file (path) for analysis>
 
 File descriptions:
 cs455/

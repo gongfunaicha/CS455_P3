@@ -4,7 +4,7 @@ import sys
 
 # Figure out whether there are only one command line arguments
 if (len(sys.argv) != 2):
-    print "Usage: Python VisualAnalysis.py <file (path) for analysis>"
+    print "Usage: python VisualAnalysis.py <file (path) for analysis>"
     sys.exit(1)
 
 # First get the file path
