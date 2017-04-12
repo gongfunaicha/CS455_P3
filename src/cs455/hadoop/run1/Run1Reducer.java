@@ -770,11 +770,15 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Used to store the age count pair, prepare to sort by count
         ArrayList<AgeCountPair> ageCountPairs = new ArrayList<>();
 
+        // Not sorted version, used to do visual output
+        ArrayList<AgeCountPair> notSortedAgeCountPairs = new ArrayList<>();
+
         for (int i = 0; i < 7; i++)
         {
             totalRenters += countArray[i];
             // Add into age count pairs
             ageCountPairs.add(new AgeCountPair(i, countArray[i]));
+            notSortedAgeCountPairs.add(new AgeCountPair(i, countArray[i]));
         }
 
         // Sort by value in descending order
@@ -789,6 +793,13 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 //        context.write(new Text("1st common renter age group in US is: " + ageCountPairs.get(0).getAgeRange() + " with number of " + ageCountPairs.get(0).getCount()), new Text(""));
 //        context.write(new Text("2nd common renter age group in US is: " + ageCountPairs.get(1).getAgeRange() + " with number of " + ageCountPairs.get(1).getCount()), new Text(""));
 //        context.write(new Text("3rd common renter age group in US is: " + ageCountPairs.get(2).getAgeRange() + " with number of " + ageCountPairs.get(2).getCount()), new Text(""));
+
+        // Print out disregard line
+        context.write(new Text(""), new Text(""));
+        context.write(new Text("** Lines below are used for visual analysis **"), new Text(""));
+
+        for (int i = 0; i < 7; i++)
+            context.write(new Text("**US RENTER**"), new Text(String.valueOf(notSortedAgeCountPairs.get(i).getPercentage(totalRenters))));
     }
 
 }

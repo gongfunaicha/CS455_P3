@@ -62,6 +62,11 @@ public class AgeCountPair implements Comparable<AgeCountPair>{
         return count;
     }
 
+    public double getPercentage(double totalRenterCount)
+    {
+        return (count / totalRenterCount) * 100;
+    }
+
     public String getStringPercentage(double totalRenterCount)
     {
         double percentage = (count / totalRenterCount) * 100;
