@@ -1,8 +1,14 @@
 # Retrieved pyplot sample from: https://matplotlib.org/examples/pie_and_polar_charts/pie_demo_features.html
 import matplotlib.pyplot as plt
+import sys
+
+# Figure out whether there are only one command line arguments
+if (len(sys.argv) != 2):
+    print "Usage: Python VisualAnalysis.py <file (path) for analysis>"
+    sys.exit(1)
 
 # First get the file path
-filename = raw_input("Please enter the file path: ")
+filename = sys.argv[1]
 
 # Open the file
 file = open(filename, 'r')
