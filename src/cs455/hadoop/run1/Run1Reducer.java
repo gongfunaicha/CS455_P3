@@ -446,9 +446,9 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Get rent count
         long[] valueArray = rentCountObject.getValueArray();
 
-        // Calculate the total number of rent houses
+        // Calculate the total number of rent houses, excluding "No cash rent"
         long totalCount = 0;
-        for (int i = 0; i < 17; i++)
+        for (int i = 0; i < 16; i++)
         {
             totalCount += valueArray[i];
         }
@@ -466,12 +466,11 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Loop until current count is larger than halfWayCount
         long currentCount = 0;
         int i  = 0;
-        for (i = 0; i < 17; i++)
+        for (i = 0; i < 16; i++)
         {
             if (currentCount > halfWayCount)
                 break;
-            // First count no cash rent (count as 0)
-            currentCount += valueArray[(i + 16) % 17];
+            currentCount += valueArray[i];
         }
 
         String medianRent = "";
@@ -479,54 +478,51 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         switch (i)
         {
             case 1:
-                medianRent = "No cash rent";
-                break;
-            case 2:
                 medianRent = "Less than $100";
                 break;
-            case 3:
+            case 2:
                 medianRent = "$100 to $149";
                 break;
-            case 4:
+            case 3:
                 medianRent = "$150 to $199";
                 break;
-            case 5:
+            case 4:
                 medianRent = "$200 to $249";
                 break;
-            case 6:
+            case 5:
                 medianRent = "$250 to $299";
                 break;
-            case 7:
+            case 6:
                 medianRent = "$300 to $349";
                 break;
-            case 8:
+            case 7:
                 medianRent = "$350 to $399";
                 break;
-            case 9:
+            case 8:
                 medianRent = "$400 to $449";
                 break;
-            case 10:
+            case 9:
                 medianRent = "$450 to $499";
                 break;
-            case 11:
+            case 10:
                 medianRent = "$500 to $549";
                 break;
-            case 12:
-                medianRent = "$550 to $ 599";
+            case 11:
+                medianRent = "$550 to $599";
                 break;
-            case 13:
+            case 12:
                 medianRent = "$600 to $649";
                 break;
-            case 14:
+            case 13:
                 medianRent = "$650 to $699";
                 break;
-            case 15:
+            case 14:
                 medianRent = "$700 to $749";
                 break;
-            case 16:
+            case 15:
                 medianRent = "$750 to $999";
                 break;
-            case 17:
+            case 16:
                 medianRent = "$1000 or more";
                 break;
         }
@@ -535,64 +531,61 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " median rent paid by households: "), new Text(medianRent));
 
         // Debug output
-        for (int j = 0; j < 17; j++)
+        for (int j = 0; j < 16; j++)
         {
             String outputCate = "";
             switch (j + 1)
             {
                 case 1:
-                    outputCate = "No cash rent";
+                    medianRent = "Less than $100";
                     break;
                 case 2:
-                    outputCate = "Less than $100";
+                    medianRent = "$100 to $149";
                     break;
                 case 3:
-                    outputCate = "$100 to $149";
+                    medianRent = "$150 to $199";
                     break;
                 case 4:
-                    outputCate = "$150 to $199";
+                    medianRent = "$200 to $249";
                     break;
                 case 5:
-                    outputCate = "$200 to $249";
+                    medianRent = "$250 to $299";
                     break;
                 case 6:
-                    outputCate = "$250 to $299";
+                    medianRent = "$300 to $349";
                     break;
                 case 7:
-                    outputCate = "$300 to $349";
+                    medianRent = "$350 to $399";
                     break;
                 case 8:
-                    outputCate = "$350 to $399";
+                    medianRent = "$400 to $449";
                     break;
                 case 9:
-                    outputCate = "$400 to $449";
+                    medianRent = "$450 to $499";
                     break;
                 case 10:
-                    outputCate = "$450 to $499";
+                    medianRent = "$500 to $549";
                     break;
                 case 11:
-                    outputCate = "$500 to $549";
+                    medianRent = "$550 to $599";
                     break;
                 case 12:
-                    outputCate = "$550 to $ 599";
+                    medianRent = "$600 to $649";
                     break;
                 case 13:
-                    outputCate = "$600 to $649";
+                    medianRent = "$650 to $699";
                     break;
                 case 14:
-                    outputCate = "$650 to $699";
+                    medianRent = "$700 to $749";
                     break;
                 case 15:
-                    outputCate = "$700 to $749";
+                    medianRent = "$750 to $999";
                     break;
                 case 16:
-                    outputCate = "$750 to $999";
-                    break;
-                case 17:
-                    outputCate = "$1000 or more";
+                    medianRent = "$1000 or more";
                     break;
             }
-            context.write(new Text(state + " " + outputCate + " house values: "), new Text(String.valueOf(valueArray[(j + 16) % 17])));
+            context.write(new Text(state + " " + outputCate + " rent: "), new Text(String.valueOf(valueArray[j])));
         }
     }
 
