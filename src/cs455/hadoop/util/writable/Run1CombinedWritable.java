@@ -18,6 +18,7 @@ public class Run1CombinedWritable implements Writable{
     private RentCountWritable rentCountWritable;
     private RoomCountWritable roomCountWritable;
     private ElderCountWritable elderCountWritable;
+    private RenterAgeDistributionWritable renterAgeDistributionWritable;
 
     public Run1CombinedWritable()
     {
@@ -30,9 +31,10 @@ public class Run1CombinedWritable implements Writable{
         rentCountWritable = new RentCountWritable();
         roomCountWritable = new RoomCountWritable();
         elderCountWritable = new ElderCountWritable();
+        renterAgeDistributionWritable = new RenterAgeDistributionWritable();
     }
 
-    public Run1CombinedWritable(String state, ResidenceCountObject residenceCountObject, MarriageCountObject marriageCountObject, AgeDistributionObject ageDistributionObject, HousePositionCountObject housePositionCountObject, HouseValueCountObject houseValueCountObject, RentCountObject rentCountObject, RoomCountObject roomCountObject, ElderCountObject elderCountObject)
+    public Run1CombinedWritable(String state, ResidenceCountObject residenceCountObject, MarriageCountObject marriageCountObject, AgeDistributionObject ageDistributionObject, HousePositionCountObject housePositionCountObject, HouseValueCountObject houseValueCountObject, RentCountObject rentCountObject, RoomCountObject roomCountObject, ElderCountObject elderCountObject, RenterAgeDistributionObject renterAgeDistributionObject)
     {
         this.state = new Text(state);
         residenceCountWritable = new ResidenceCountWritable(residenceCountObject);
@@ -43,6 +45,7 @@ public class Run1CombinedWritable implements Writable{
         rentCountWritable = new RentCountWritable(rentCountObject);
         roomCountWritable = new RoomCountWritable(roomCountObject);
         elderCountWritable = new ElderCountWritable(elderCountObject);
+        renterAgeDistributionWritable = new RenterAgeDistributionWritable(renterAgeDistributionObject);
     }
 
     // Copy constructor
@@ -57,6 +60,7 @@ public class Run1CombinedWritable implements Writable{
         rentCountWritable = new RentCountWritable(run1CombinedWritable.getRentCountObject());
         roomCountWritable = new RoomCountWritable(run1CombinedWritable.getRoomCountObject());
         elderCountWritable = new ElderCountWritable(run1CombinedWritable.getElderCountObject());
+        renterAgeDistributionWritable = new RenterAgeDistributionWritable(run1CombinedWritable.getRenterAgeDistributionObject());
     }
 
     public AgeDistributionObject getAgeDistributionObject()
@@ -99,6 +103,11 @@ public class Run1CombinedWritable implements Writable{
         return elderCountWritable.getElderCountObject();
     }
 
+    public RenterAgeDistributionObject getRenterAgeDistributionObject()
+    {
+        return renterAgeDistributionWritable.getRenterAgeDistributionObject();
+    }
+
     public String getState()
     {
         return state.toString();
@@ -116,6 +125,7 @@ public class Run1CombinedWritable implements Writable{
         rentCountWritable.readFields(dataInput);
         roomCountWritable.readFields(dataInput);
         elderCountWritable.readFields(dataInput);
+        renterAgeDistributionWritable.readFields(dataInput);
     }
 
     // Write in question order, state first
@@ -130,5 +140,6 @@ public class Run1CombinedWritable implements Writable{
         rentCountWritable.write(dataOutput);
         roomCountWritable.write(dataOutput);
         elderCountWritable.write(dataOutput);
+        renterAgeDistributionWritable.write(dataOutput);
     }
 }

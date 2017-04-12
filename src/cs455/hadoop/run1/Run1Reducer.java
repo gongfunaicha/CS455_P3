@@ -35,6 +35,9 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // HashMap of State to elderly people percentage
         HashMap<String, Double> elderlyPeoplePercentageByState = new HashMap<>();
 
+        // ArrayList of renter age distribution object
+        ArrayList<RenterAgeDistributionObject> renterAgeDistributionByState = new ArrayList<>();
+
         // Iterator through the groupByState
         for (Map.Entry<String, ArrayList<Run1CombinedWritable>> entry : groupByState.entrySet())
         {
@@ -50,6 +53,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             RentCountObject aggregatedRentCountObject = RentCountObject.aggregate(collection);
             RoomCountObject aggregatedRoomCountObject = RoomCountObject.aggregate(collection);
             ElderCountObject aggregatedElderCountObject = ElderCountObject.aggregate(collection);
+            RenterAgeDistributionObject aggregatedRenterAgeDistributionObject = RenterAgeDistributionObject.aggregate(collection);
 
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
@@ -58,6 +62,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             HousePositionCountAnalysis(context, state, aggregatedHousePositionCountObject);
             HouseValueCountAnalysis(context, state, aggregatedHouseValueCountObject);
             RentCountAnalysis(context, state, aggregatedRentCountObject);
+            RenterAgeDistributionAnalysisAndUpdateArrayList(context, state, aggregatedRenterAgeDistributionObject, renterAgeDistributionByState);
 
             //Calculate average number of rooms and add into ArrayList
             PopulateAvgNumRoom(aggregatedRoomCountObject, avgNumRoom);
@@ -70,6 +75,9 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Perform across state level aggregation and analysis
         PercentileAvgNumRoomAnalysis(context, avgNumRoom);
         ElderlyPeoplePercentageAnalysis(context, elderlyPeoplePercentageByState);
+        RenterAgeDistributionObject USRenterAgeDistributionObject = RenterAgeDistributionObject.aggregateByState(renterAgeDistributionByState);
+        RenterAgeDistributionAnalysis(context, USRenterAgeDistributionObject);
+
 
     }
 
@@ -211,7 +219,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " Hispanic male below 18 years (inclusive) old percentage: "), new Text("\t\t\t" + stringMale_18Percentage));
         context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringMale19_29Percentage));
         context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringMale30_39Percentage));
-        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old percentage: "), new Text("\t\t" + stringFemale_18Percentage));
+        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old percentage: "), new Text("\t\t\t" + stringFemale_18Percentage));
         context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringFemale19_29Percentage));
         context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringFemale30_39Percentage));
 
@@ -280,7 +288,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Handle the case that total count is 0
         if (totalCount == 0)
         {
-            context.write(new Text(state), new Text(" does not contain any house occupied by owners."));
+            context.write(new Text(state + " does not contain any house occupied by owners."), new Text(""));
             return;
         }
 
@@ -452,7 +460,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Handle the case that total count is 0
         if (totalCount == 0)
         {
-            context.write(new Text(state), new Text(" does not contain any house rent."));
+            context.write(new Text(state + " does not contain any house rent."), new Text(""));
             return;
         }
 
@@ -711,6 +719,70 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 
         // Write to output
         context.write(new Text("95th percentile of the average number of rooms per house across all states is: "), new Text(stringPercentileAvgNumRoom));
+    }
+
+    private void RenterAgeDistributionAnalysisAndUpdateArrayList(Context context, String state, RenterAgeDistributionObject renterAgeDistributionObject, ArrayList<RenterAgeDistributionObject> renterAgeDistributionByState) throws IOException, InterruptedException
+    {
+        long[] countArray = renterAgeDistributionObject.getCountArray();
+
+        double totalRenters = 0;
+
+        // Used to store the age count pair, prepare to sort by count
+        ArrayList<AgeCountPair> ageCountPairs = new ArrayList<>();
+
+        for (int i = 0; i < 7; i++)
+        {
+            totalRenters += countArray[i];
+            // Add into age count pairs
+            ageCountPairs.add(new AgeCountPair(i, countArray[i]));
+        }
+
+        // Return in case there is no renter in the state
+        if (totalRenters == 0)
+        {
+            context.write(new Text(state + " does not have any renters."), new Text(""));
+            return;
+        }
+
+        // Sort by value in descending order
+        Collections.sort(ageCountPairs);
+
+        // Print out first three pairs
+        context.write(new Text(state + " 1st common renter age group is: " + ageCountPairs.get(0).getAgeRange() + " with percentage of " + ageCountPairs.get(0).getStringPercentage(totalRenters)), new Text(""));
+
+        context.write(new Text(state + " 2nd common renter age group is: " + ageCountPairs.get(1).getAgeRange() + " with percentage of " + ageCountPairs.get(1).getStringPercentage(totalRenters)), new Text(""));
+
+        context.write(new Text(state + " 3rd common renter age group is: " + ageCountPairs.get(2).getAgeRange() + " with percentage of " + ageCountPairs.get(2).getStringPercentage(totalRenters)), new Text(""));
+
+        // Put into arraylist
+        renterAgeDistributionByState.add(renterAgeDistributionObject);
+    }
+
+    private void RenterAgeDistributionAnalysis(Context context, RenterAgeDistributionObject renterAgeDistributionObject) throws IOException, InterruptedException
+    {
+        long[] countArray = renterAgeDistributionObject.getCountArray();
+
+        double totalRenters = 0;
+
+        // Used to store the age count pair, prepare to sort by count
+        ArrayList<AgeCountPair> ageCountPairs = new ArrayList<>();
+
+        for (int i = 0; i < 7; i++)
+        {
+            totalRenters += countArray[i];
+            // Add into age count pairs
+            ageCountPairs.add(new AgeCountPair(i, countArray[i]));
+        }
+
+        // Sort by value in descending order
+        Collections.sort(ageCountPairs);
+
+        // Print out first three pairs
+        context.write(new Text("1st common renter age group in US is: " + ageCountPairs.get(0).getAgeRange() + " with percentage of " + ageCountPairs.get(0).getStringPercentage(totalRenters)), new Text(""));
+
+        context.write(new Text("2nd common renter age group in US is: " + ageCountPairs.get(1).getAgeRange() + " with percentage of " + ageCountPairs.get(1).getStringPercentage(totalRenters)), new Text(""));
+
+        context.write(new Text("3rd common renter age group in US is: " + ageCountPairs.get(2).getAgeRange() + " with percentage of " + ageCountPairs.get(2).getStringPercentage(totalRenters)), new Text(""));
     }
 
 }

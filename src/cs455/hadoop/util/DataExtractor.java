@@ -182,4 +182,18 @@ public class DataExtractor {
 
         return new ElderCountObject(elderCount, totalCount);
     }
+
+    public static RenterAgeDistributionObject renterAgeDistributionExtractor(String line)
+    {
+        // Renter age distribution storage
+        long[] countArray = new long[7];
+
+        // Starting from index 2326, there are 7 categories for renter age distribution
+        for (int i = 0; i < 7; i++)
+        {
+            countArray[i] = Long.parseLong(line.substring(2325 + 9 * i, 2334 + 9 * i));
+        }
+
+        return new RenterAgeDistributionObject(countArray);
+    }
 }
