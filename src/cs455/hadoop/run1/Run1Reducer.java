@@ -6,10 +6,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>{
 
@@ -32,8 +29,8 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             groupByState.get(state).add(new Run1CombinedWritable(val));
         }
 
-        // ArrayList of RoomCountObject, used for aggregate among states
-        ArrayList<RoomCountObject> collectionOfRoomCount = new ArrayList<>();
+        // ArrayList of average number of rooms
+        ArrayList<Double> avgNumRoom = new ArrayList<>();
 
         // HashMap of State to elderly people percentage
         HashMap<String, Double> elderlyPeoplePercentageByState = new HashMap<>();
@@ -54,9 +51,6 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             RoomCountObject aggregatedRoomCountObject = RoomCountObject.aggregate(collection);
             ElderCountObject aggregatedElderCountObject = ElderCountObject.aggregate(collection);
 
-            // Add RoomCountObject into collection of room count
-            collectionOfRoomCount.add(aggregatedRoomCountObject);
-
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
             MarriageCountAnalysis(context, state, aggregatedMarriageCountObject);
@@ -65,14 +59,16 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             HouseValueCountAnalysis(context, state, aggregatedHouseValueCountObject);
             RentCountAnalysis(context, state, aggregatedRentCountObject);
 
+            //Calculate average number of rooms and add into ArrayList
+            PopulateAvgNumRoom(aggregatedRoomCountObject, avgNumRoom);
+
             // Update hashmap of elderly people percentage by state
             PopulateElderlyPeoplePercentageByState(state, aggregatedElderCountObject, elderlyPeoplePercentageByState);
 
         }
 
         // Perform across state level aggregation and analysis
-        RoomCountObject totalRoomCountObject = RoomCountObject.aggregateByState(collectionOfRoomCount);
-        RoomCountAnalysis(context, totalRoomCountObject);
+        PercentileAvgNumRoomAnalysis(context, avgNumRoom);
         ElderlyPeoplePercentageAnalysis(context, elderlyPeoplePercentageByState);
 
     }
@@ -537,58 +533,59 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             switch (j + 1)
             {
                 case 1:
-                    medianRent = "Less than $100";
+                    outputCate = "Less than $100";
                     break;
                 case 2:
-                    medianRent = "$100 to $149";
+                    outputCate = "$100 to $149";
                     break;
                 case 3:
-                    medianRent = "$150 to $199";
+                    outputCate = "$150 to $199";
                     break;
                 case 4:
-                    medianRent = "$200 to $249";
+                    outputCate = "$200 to $249";
                     break;
                 case 5:
-                    medianRent = "$250 to $299";
+                    outputCate = "$250 to $299";
                     break;
                 case 6:
-                    medianRent = "$300 to $349";
+                    outputCate = "$300 to $349";
                     break;
                 case 7:
-                    medianRent = "$350 to $399";
+                    outputCate = "$350 to $399";
                     break;
                 case 8:
-                    medianRent = "$400 to $449";
+                    outputCate = "$400 to $449";
                     break;
                 case 9:
-                    medianRent = "$450 to $499";
+                    outputCate = "$450 to $499";
                     break;
                 case 10:
-                    medianRent = "$500 to $549";
+                    outputCate = "$500 to $549";
                     break;
                 case 11:
-                    medianRent = "$550 to $599";
+                    outputCate = "$550 to $599";
                     break;
                 case 12:
-                    medianRent = "$600 to $649";
+                    outputCate = "$600 to $649";
                     break;
                 case 13:
-                    medianRent = "$650 to $699";
+                    outputCate = "$650 to $699";
                     break;
                 case 14:
-                    medianRent = "$700 to $749";
+                    outputCate = "$700 to $749";
                     break;
                 case 15:
-                    medianRent = "$750 to $999";
+                    outputCate = "$750 to $999";
                     break;
                 case 16:
-                    medianRent = "$1000 or more";
+                    outputCate = "$1000 or more";
                     break;
             }
             context.write(new Text(state + " " + outputCate + " rent: "), new Text(String.valueOf(valueArray[j])));
         }
     }
 
+    // Deprecated
     private void RoomCountAnalysis(Context context, RoomCountObject roomCountObject) throws IOException, InterruptedException
     {
         // Get room count
@@ -665,6 +662,51 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 
         String stringHighestElderPeoplePercentage = String.format("%.2f", highestElderPeoplePercentage) + "%";
         context.write(new Text(highestPercentageState + " has the highest percentage of elderly people: "), new Text(stringHighestElderPeoplePercentage));
+    }
+
+    private void PopulateAvgNumRoom(RoomCountObject roomCountObject, ArrayList<Double> avgNumRoom)
+    {
+        long[] countArray = roomCountObject.getCountArray();
+
+        // Store the total number of houses and weighted number of houses
+        double totalHouseCount = 0;
+        double weightedHouseCount = 0;
+
+        // Iterate through the room counts
+        for (int i = 0; i < 9; i++)
+        {
+            totalHouseCount += countArray[i];
+            weightedHouseCount += countArray[i] * (i+1);
+        }
+
+        double avgRoom = weightedHouseCount / totalHouseCount;
+
+        // Add into avgNumRoom
+        avgNumRoom.add(avgRoom);
+    }
+
+    private void PercentileAvgNumRoomAnalysis(Context context, ArrayList<Double> avgNumRoom) throws IOException, InterruptedException
+    {
+        // Sort average number of rooms to ascending order
+        Collections.sort(avgNumRoom);
+
+        // get total state count
+        int stateCount = avgNumRoom.size();
+
+        // get per state increment, count total as 100
+        double perStateIncrement =  100.00/stateCount;
+
+        // get index of 95 percentile
+        int index = (int)(95 / perStateIncrement);
+
+        // get the 95th percentile of avg number of room
+        double percentileAvgNumRoom = avgNumRoom.get(index);
+
+        // Convert into String
+        String stringPercentileAvgNumRoom = String.format("%.2f", percentileAvgNumRoom);
+
+        // Write to output
+        context.write(new Text("95th percentile of the average number of rooms per house across all states is: "), new Text(stringPercentileAvgNumRoom));
     }
 
 }
