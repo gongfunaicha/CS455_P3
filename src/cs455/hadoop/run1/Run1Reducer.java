@@ -6,10 +6,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+
+import java.util.*;
 
 public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>{
 
@@ -32,13 +30,17 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             groupByState.get(state).add(new Run1CombinedWritable(val));
         }
 
-        // ArrayList of RoomCountObject, used for aggregate among states
-        ArrayList<RoomCountObject> collectionOfRoomCount = new ArrayList<>();
+        // ArrayList of average number of rooms
+        ArrayList<Double> avgNumRoom = new ArrayList<>();
 
         // HashMap of State to elderly people percentage
         HashMap<String, Double> elderlyPeoplePercentageByState = new HashMap<>();
 
-        // Iterator through the groupByState, emit one Run1CombinedWritable for each state
+        // ArrayList of renter age distribution object
+        ArrayList<RenterAgeDistributionObject> renterAgeDistributionByState = new ArrayList<>();
+
+        // Iterator through the groupByState
+
         for (Map.Entry<String, ArrayList<Run1CombinedWritable>> entry : groupByState.entrySet())
         {
             String state = entry.getKey();
@@ -52,9 +54,8 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             HouseValueCountObject aggregatedHouseValueCountObject = HouseValueCountObject.aggregate(collection);
             RentCountObject aggregatedRentCountObject = RentCountObject.aggregate(collection);
             RoomCountObject aggregatedRoomCountObject = RoomCountObject.aggregate(collection);
-
-            // Add RoomCountObject into collection of room count
-            collectionOfRoomCount.add(aggregatedRoomCountObject);
+            ElderCountObject aggregatedElderCountObject = ElderCountObject.aggregate(collection);
+            RenterAgeDistributionObject aggregatedRenterAgeDistributionObject = RenterAgeDistributionObject.aggregate(collection);
 
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
@@ -63,13 +64,23 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             HousePositionCountAnalysis(context, state, aggregatedHousePositionCountObject);
             HouseValueCountAnalysis(context, state, aggregatedHouseValueCountObject);
             RentCountAnalysis(context, state, aggregatedRentCountObject);
+            RenterAgeDistributionAnalysisAndUpdateArrayList(context, state, aggregatedRenterAgeDistributionObject, renterAgeDistributionByState);
+
+            //Calculate average number of rooms and add into ArrayList
+            PopulateAvgNumRoom(aggregatedRoomCountObject, avgNumRoom);
+
+            // Update hashmap of elderly people percentage by state
+            PopulateElderlyPeoplePercentageByState(state, aggregatedElderCountObject, elderlyPeoplePercentageByState);
 
         }
 
         // Perform across state level aggregation and analysis
-        RoomCountObject totalRoomCountObject = RoomCountObject.aggregateByState(collectionOfRoomCount);
-        RoomCountAnalysis(context, totalRoomCountObject);
+
+        PercentileAvgNumRoomAnalysis(context, avgNumRoom);
         ElderlyPeoplePercentageAnalysis(context, elderlyPeoplePercentageByState);
+        RenterAgeDistributionObject USRenterAgeDistributionObject = RenterAgeDistributionObject.aggregateByState(renterAgeDistributionByState);
+        RenterAgeDistributionAnalysis(context, USRenterAgeDistributionObject);
+
 
     }
 
@@ -102,8 +113,8 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " owned percentage: "), new Text(strOwnedPercentage));
 
         // Debug output
-        context.write(new Text(state + " rented count: "), new Text(String.valueOf(rentCount)));
-        context.write(new Text(state + " owned count: "), new Text(String.valueOf(ownedCount)));
+//        context.write(new Text(state + " rented count: "), new Text(String.valueOf(rentCount)));
+//        context.write(new Text(state + " owned count: "), new Text(String.valueOf(ownedCount)));
     }
 
     private void MarriageCountAnalysis(Context context, String state, MarriageCountObject marriageCountObject) throws IOException, InterruptedException
@@ -143,10 +154,10 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " female never married percentage: "), new Text(strFemaleNeverMarriedPercentage));
 
         // Debug output
-        context.write(new Text(state + " male never married count: "), new Text(String.valueOf(maleNeverMarried)));
-        context.write(new Text(state + " total male population: "), new Text(String.valueOf(maleTotal)));
-        context.write(new Text(state + " female never married count: "), new Text(String.valueOf(femaleNeverMarried)));
-        context.write(new Text(state + " total female population: "), new Text(String.valueOf(femaleTotal)));
+//        context.write(new Text(state + " male never married count: "), new Text(String.valueOf(maleNeverMarried)));
+//        context.write(new Text(state + " total male population: "), new Text(String.valueOf(maleTotal)));
+//        context.write(new Text(state + " female never married count: "), new Text(String.valueOf(femaleNeverMarried)));
+//        context.write(new Text(state + " total female population: "), new Text(String.valueOf(femaleTotal)));
     }
 
     private void AgeDistributionAnalysis(Context context, String state, AgeDistributionObject ageDistributionObject, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException
@@ -213,25 +224,21 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " Hispanic male below 18 years (inclusive) old percentage: "), new Text("\t\t\t" + stringMale_18Percentage));
         context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringMale19_29Percentage));
         context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringMale30_39Percentage));
-        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old percentage: "), new Text("\t\t" + stringFemale_18Percentage));
+        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old percentage: "), new Text("\t\t\t" + stringFemale_18Percentage));
         context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old percentage: "), new Text(stringFemale19_29Percentage));
         context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringFemale30_39Percentage));
 
         // Debug output
-        context.write(new Text(state + " Hispanic male below 18 years (inclusive) old count: "), new Text("\t\t\t" + String.valueOf(male_18)));
-        context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(male19_29)));
-        context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(male30_39)));
-        context.write(new Text(state + " Hispanic male count: "), new Text("\t\t\t\t\t\t" + String.valueOf(maleTotal)));
-        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old count: "), new Text("\t\t" + String.valueOf(female_18)));
-        context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(female19_29)));
-        context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(female30_39)));
-        context.write(new Text(state + " Hispanic female count: "), new Text("\t\t\t\t\t\t" + String.valueOf(femaleTotal)));
 
-        // Calculate elderly people percentage and put into hashmap
-        long elderlyPeopleCount = male85_ + female85_;
-        double totalCount = femaleTotal + maleTotal;
-        double elderlyPeoplePercentage = (elderlyPeopleCount / totalCount) * 100;
-        elderlyPeoplePercentageByState.put(state, elderlyPeoplePercentage);
+//        context.write(new Text(state + " Hispanic male below 18 years (inclusive) old count: "), new Text("\t\t\t" + String.valueOf(male_18)));
+//        context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(male19_29)));
+//        context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(male30_39)));
+//        context.write(new Text(state + " Hispanic male count: "), new Text("\t\t\t\t\t\t" + String.valueOf(maleTotal)));
+//        context.write(new Text(state + " Hispanic female below 18 years (inclusive) old count: "), new Text("\t\t" + String.valueOf(female_18)));
+//        context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(female19_29)));
+//        context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(female30_39)));
+//        context.write(new Text(state + " Hispanic female count: "), new Text("\t\t\t\t\t\t" + String.valueOf(femaleTotal)));
+
     }
 
     private void HousePositionCountAnalysis(Context context, String state, HousePositionCountObject housePositionCountObject) throws IOException, InterruptedException
@@ -267,10 +274,10 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " urban household percentage: "), new Text(stringUrbanPercentage));
 
         // Debug output
-        context.write(new Text(state + " rural household count: "), new Text(String.valueOf(ruralCount)));
-        context.write(new Text(state + " urban household count: "), new Text(String.valueOf(urbanCount)));
-        context.write(new Text(state + " other household count: "), new Text(String.valueOf(otherCount)));
-        context.write(new Text(state + " total household count: "), new Text(String.valueOf(totalCount)));
+//        context.write(new Text(state + " rural household count: "), new Text(String.valueOf(ruralCount)));
+//        context.write(new Text(state + " urban household count: "), new Text(String.valueOf(urbanCount)));
+//        context.write(new Text(state + " other household count: "), new Text(String.valueOf(otherCount)));
+//        context.write(new Text(state + " total household count: "), new Text(String.valueOf(totalCount)));
     }
 
     private void HouseValueCountAnalysis(Context context, String state, HouseValueCountObject houseValueCountObject) throws IOException, InterruptedException
@@ -288,7 +295,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Handle the case that total count is 0
         if (totalCount == 0)
         {
-            context.write(new Text(state), new Text(" does not contain any house occupied by owners."));
+            context.write(new Text(state + " does not contain any house occupied by owners."), new Text(""));
             return;
         }
 
@@ -373,7 +380,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 
         // Write to output
         context.write(new Text(state + " median value of the house that occupied by owners: "), new Text(medianHouseValue));
-
+/*
         // Debug output
         for (int j = 0; j < 20; j++)
         {
@@ -442,7 +449,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
                     break;
             }
             context.write(new Text(state + " " + outputCate + " house values: "), new Text(String.valueOf(valueArray[j])));
-        }
+        } */
     }
 
     private void RentCountAnalysis(Context context, String state, RentCountObject rentCountObject) throws IOException, InterruptedException
@@ -450,9 +457,9 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Get rent count
         long[] valueArray = rentCountObject.getValueArray();
 
-        // Calculate the total number of rent houses
+        // Calculate the total number of rent houses, excluding "No cash rent"
         long totalCount = 0;
-        for (int i = 0; i < 17; i++)
+        for (int i = 0; i < 16; i++)
         {
             totalCount += valueArray[i];
         }
@@ -460,7 +467,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Handle the case that total count is 0
         if (totalCount == 0)
         {
-            context.write(new Text(state), new Text(" does not contain any house rent."));
+            context.write(new Text(state + " does not contain any house rent."), new Text(""));
             return;
         }
 
@@ -470,12 +477,11 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         // Loop until current count is larger than halfWayCount
         long currentCount = 0;
         int i  = 0;
-        for (i = 0; i < 17; i++)
+        for (i = 0; i < 16; i++)
         {
             if (currentCount > halfWayCount)
                 break;
-            // First count no cash rent (count as 0)
-            currentCount += valueArray[(i + 16) % 17];
+            currentCount += valueArray[i];
         }
 
         String medianRent = "";
@@ -483,54 +489,51 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         switch (i)
         {
             case 1:
-                medianRent = "No cash rent";
-                break;
-            case 2:
                 medianRent = "Less than $100";
                 break;
-            case 3:
+            case 2:
                 medianRent = "$100 to $149";
                 break;
-            case 4:
+            case 3:
                 medianRent = "$150 to $199";
                 break;
-            case 5:
+            case 4:
                 medianRent = "$200 to $249";
                 break;
-            case 6:
+            case 5:
                 medianRent = "$250 to $299";
                 break;
-            case 7:
+            case 6:
                 medianRent = "$300 to $349";
                 break;
-            case 8:
+            case 7:
                 medianRent = "$350 to $399";
                 break;
-            case 9:
+            case 8:
                 medianRent = "$400 to $449";
                 break;
-            case 10:
+            case 9:
                 medianRent = "$450 to $499";
                 break;
-            case 11:
+            case 10:
                 medianRent = "$500 to $549";
                 break;
-            case 12:
-                medianRent = "$550 to $ 599";
+            case 11:
+                medianRent = "$550 to $599";
                 break;
-            case 13:
+            case 12:
                 medianRent = "$600 to $649";
                 break;
-            case 14:
+            case 13:
                 medianRent = "$650 to $699";
                 break;
-            case 15:
+            case 14:
                 medianRent = "$700 to $749";
                 break;
-            case 16:
+            case 15:
                 medianRent = "$750 to $999";
                 break;
-            case 17:
+            case 16:
                 medianRent = "$1000 or more";
                 break;
         }
@@ -539,67 +542,65 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " median rent paid by households: "), new Text(medianRent));
 
         // Debug output
-        for (int j = 0; j < 17; j++)
+ /*       for (int j = 0; j < 16; j++)
         {
             String outputCate = "";
             switch (j + 1)
             {
                 case 1:
-                    outputCate = "No cash rent";
-                    break;
-                case 2:
                     outputCate = "Less than $100";
                     break;
-                case 3:
+                case 2:
                     outputCate = "$100 to $149";
                     break;
-                case 4:
+                case 3:
                     outputCate = "$150 to $199";
                     break;
-                case 5:
+                case 4:
                     outputCate = "$200 to $249";
                     break;
-                case 6:
+                case 5:
                     outputCate = "$250 to $299";
                     break;
-                case 7:
+                case 6:
                     outputCate = "$300 to $349";
                     break;
-                case 8:
+                case 7:
                     outputCate = "$350 to $399";
                     break;
-                case 9:
+                case 8:
                     outputCate = "$400 to $449";
                     break;
-                case 10:
+                case 9:
                     outputCate = "$450 to $499";
                     break;
-                case 11:
+                case 10:
                     outputCate = "$500 to $549";
                     break;
-                case 12:
-                    outputCate = "$550 to $ 599";
+                case 11:
+                    outputCate = "$550 to $599";
                     break;
-                case 13:
+                case 12:
                     outputCate = "$600 to $649";
                     break;
-                case 14:
+                case 13:
                     outputCate = "$650 to $699";
                     break;
-                case 15:
+                case 14:
                     outputCate = "$700 to $749";
                     break;
-                case 16:
+                case 15:
                     outputCate = "$750 to $999";
                     break;
-                case 17:
+                case 16:
                     outputCate = "$1000 or more";
                     break;
             }
-            context.write(new Text(state + " " + outputCate + " house values: "), new Text(String.valueOf(valueArray[(j + 16) % 17])));
-        }
+            context.write(new Text(state + " " + outputCate + " rent: "), new Text(String.valueOf(valueArray[j])));
+        } */
     }
 
+    // Deprecated
     private void RoomCountAnalysis(Context context, RoomCountObject roomCountObject) throws IOException, InterruptedException
     {
         // Get room count
@@ -635,11 +636,177 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text("95th percentile of the average number of rooms per house across all states is: "), new Text(String.valueOf(i)));
 
         // Debug output
-        for (int j = 0; j < 9; j++)
+/*        for (int j = 0; j < 9; j++)
         {
             context.write(new Text("US " + String.valueOf(j + 1)+ " room houses: "), new Text(String.valueOf(countArray[j])));
+        } */
+
+    }
+
+    // Calculate elder people percentage and put into hashmap
+    private void PopulateElderlyPeoplePercentageByState(String state, ElderCountObject elderCountObject, HashMap<String, Double> elderlyPeoplePercentageByState)
+    {
+        long elderCount = elderCountObject.getElderCount();
+        long totalCount = elderCountObject.getTotalCount();
+
+        // Ignore if there is no people in that state
+        if (totalCount != 0)
+        {
+            double elderPercentage = (elderCount/(double)totalCount) * 100;
+            elderlyPeoplePercentageByState.put(state, elderPercentage);
+        }
+    }
+
+    private void ElderlyPeoplePercentageAnalysis(Context context, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException
+    {
+        // Real elder people percentage should always be >= 0%
+        double highestElderPeoplePercentage = -100;
+        String highestPercentageState = "";
+
+        for (Map.Entry<String, Double> entry: elderlyPeoplePercentageByState.entrySet())
+        {
+            String currentState = entry.getKey();
+            double currentPercentage = entry.getValue();
+
+            if (currentPercentage > highestElderPeoplePercentage)
+            {
+                highestElderPeoplePercentage = currentPercentage;
+                highestPercentageState = currentState;
+            }
         }
 
+        String stringHighestElderPeoplePercentage = String.format("%.2f", highestElderPeoplePercentage) + "%";
+        context.write(new Text(highestPercentageState + " has the highest percentage of elderly people: "), new Text(stringHighestElderPeoplePercentage));
+    }
+
+    private void PopulateAvgNumRoom(RoomCountObject roomCountObject, ArrayList<Double> avgNumRoom)
+    {
+        long[] countArray = roomCountObject.getCountArray();
+
+        // Store the total number of houses and weighted number of houses
+        double totalHouseCount = 0;
+        double weightedHouseCount = 0;
+
+        // Iterate through the room counts
+        for (int i = 0; i < 9; i++)
+        {
+            totalHouseCount += countArray[i];
+            weightedHouseCount += countArray[i] * (i+1);
+        }
+
+        // Ignore if no house in the state
+        if (totalHouseCount != 0)
+        {
+            double avgRoom = weightedHouseCount / totalHouseCount;
+
+            // Add into avgNumRoom
+            avgNumRoom.add(avgRoom);
+        }
+    }
+
+    private void PercentileAvgNumRoomAnalysis(Context context, ArrayList<Double> avgNumRoom) throws IOException, InterruptedException
+    {
+        // Sort average number of rooms to ascending order
+        Collections.sort(avgNumRoom);
+
+        // get total state count
+        int stateCount = avgNumRoom.size();
+
+        // get per state increment, count total as 100
+        double perStateIncrement =  100.00/stateCount;
+
+        // get index of 95 percentile
+        int index = (int)(95 / perStateIncrement);
+
+        // get the 95th percentile of avg number of room
+        double percentileAvgNumRoom = avgNumRoom.get(index);
+
+        // Convert into String
+        String stringPercentileAvgNumRoom = String.format("%.2f", percentileAvgNumRoom);
+
+        // Write to output
+        context.write(new Text("95th percentile of the average number of rooms per house across all states is: "), new Text(stringPercentileAvgNumRoom));
+    }
+
+    private void RenterAgeDistributionAnalysisAndUpdateArrayList(Context context, String state, RenterAgeDistributionObject renterAgeDistributionObject, ArrayList<RenterAgeDistributionObject> renterAgeDistributionByState) throws IOException, InterruptedException
+    {
+        long[] countArray = renterAgeDistributionObject.getCountArray();
+
+        double totalRenters = 0;
+
+        // Used to store the age count pair, prepare to sort by count
+        ArrayList<AgeCountPair> ageCountPairs = new ArrayList<>();
+
+        for (int i = 0; i < 7; i++)
+        {
+            totalRenters += countArray[i];
+            // Add into age count pairs
+            ageCountPairs.add(new AgeCountPair(i, countArray[i]));
+        }
+
+        // Return in case there is no renter in the state
+        if (totalRenters == 0)
+        {
+            context.write(new Text(state + " does not have any renters."), new Text(""));
+            return;
+        }
+
+        // Sort by value in descending order
+        Collections.sort(ageCountPairs);
+
+        // Print out first three pairs
+        context.write(new Text(state + " 1st common renter age group is: " + ageCountPairs.get(0).getAgeRange() + " with percentage of " + ageCountPairs.get(0).getStringPercentage(totalRenters)), new Text(""));
+        context.write(new Text(state + " 2nd common renter age group is: " + ageCountPairs.get(1).getAgeRange() + " with percentage of " + ageCountPairs.get(1).getStringPercentage(totalRenters)), new Text(""));
+        context.write(new Text(state + " 3rd common renter age group is: " + ageCountPairs.get(2).getAgeRange() + " with percentage of " + ageCountPairs.get(2).getStringPercentage(totalRenters)), new Text(""));
+
+        // Debug output
+//        context.write(new Text(state + " 1st common renter age group is: " + ageCountPairs.get(0).getAgeRange() + " with number of " + ageCountPairs.get(0).getCount()), new Text(""));
+//        context.write(new Text(state + " 2nd common renter age group is: " + ageCountPairs.get(1).getAgeRange() + " with number of " + ageCountPairs.get(1).getCount()), new Text(""));
+//        context.write(new Text(state + " 3rd common renter age group is: " + ageCountPairs.get(2).getAgeRange() + " with number of " + ageCountPairs.get(2).getCount()), new Text(""));
+
+        // Put into arraylist
+        renterAgeDistributionByState.add(renterAgeDistributionObject);
+    }
+
+    private void RenterAgeDistributionAnalysis(Context context, RenterAgeDistributionObject renterAgeDistributionObject) throws IOException, InterruptedException
+    {
+        long[] countArray = renterAgeDistributionObject.getCountArray();
+
+        double totalRenters = 0;
+
+        // Used to store the age count pair, prepare to sort by count
+        ArrayList<AgeCountPair> ageCountPairs = new ArrayList<>();
+
+        // Not sorted version, used to do visual output
+        ArrayList<AgeCountPair> notSortedAgeCountPairs = new ArrayList<>();
+
+        for (int i = 0; i < 7; i++)
+        {
+            totalRenters += countArray[i];
+            // Add into age count pairs
+            ageCountPairs.add(new AgeCountPair(i, countArray[i]));
+            notSortedAgeCountPairs.add(new AgeCountPair(i, countArray[i]));
+        }
+
+        // Sort by value in descending order
+        Collections.sort(ageCountPairs);
+
+        // Print out first three pairs
+        context.write(new Text("1st common renter age group in US is: " + ageCountPairs.get(0).getAgeRange() + " with percentage of " + ageCountPairs.get(0).getStringPercentage(totalRenters)), new Text(""));
+        context.write(new Text("2nd common renter age group in US is: " + ageCountPairs.get(1).getAgeRange() + " with percentage of " + ageCountPairs.get(1).getStringPercentage(totalRenters)), new Text(""));
+        context.write(new Text("3rd common renter age group in US is: " + ageCountPairs.get(2).getAgeRange() + " with percentage of " + ageCountPairs.get(2).getStringPercentage(totalRenters)), new Text(""));
+
+        // Debug output
+//        context.write(new Text("1st common renter age group in US is: " + ageCountPairs.get(0).getAgeRange() + " with number of " + ageCountPairs.get(0).getCount()), new Text(""));
+//        context.write(new Text("2nd common renter age group in US is: " + ageCountPairs.get(1).getAgeRange() + " with number of " + ageCountPairs.get(1).getCount()), new Text(""));
+//        context.write(new Text("3rd common renter age group in US is: " + ageCountPairs.get(2).getAgeRange() + " with number of " + ageCountPairs.get(2).getCount()), new Text(""));
+
+        // Print out disregard line
+        context.write(new Text(""), new Text(""));
+        context.write(new Text("** Lines below are used for visual analysis **"), new Text(""));
+
+        for (int i = 0; i < 7; i++)
+            context.write(new Text("**US RENTER**"), new Text(String.valueOf(notSortedAgeCountPairs.get(i).getPercentage(totalRenters))));
     }
 
     private void ElderlyPeoplePercentageAnalysis(Context context, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException

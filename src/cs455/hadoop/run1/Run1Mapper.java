@@ -23,6 +23,8 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         HouseValueCountObject houseValueCountObject = null;
         RentCountObject rentCountObject = null;
         RoomCountObject roomCountObject = null;
+        ElderCountObject elderCountObject = null;
+        RenterAgeDistributionObject renterAgeDistributionObject = null;
 
         // Convert value into string
         String line = value.toString();
@@ -42,7 +44,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
 
         if (logicalRecordPartNumber == 1)
         {
-            // Using part 1 we can solve question 2 and 3
+            // Using part 1 we can solve question 2, 3, and 8
 
             // First initialize other objects with empty constructor
             residenceCountObject = new ResidenceCountObject();
@@ -50,18 +52,21 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
             houseValueCountObject = new HouseValueCountObject();
             rentCountObject = new RentCountObject();
             roomCountObject = new RoomCountObject();
+            renterAgeDistributionObject = new RenterAgeDistributionObject();
 
             // Extract data from line
             marriageCountObject = DataExtractor.marriageCountExtractor(line);
             ageDistributionObject = DataExtractor.ageDistributionExtractor(line);
+            elderCountObject = DataExtractor.elderCountExtractor(line);
         }
         else if (logicalRecordPartNumber == 2)
         {
-            // Using part 2 we can solve question 1, 4, 5, 6, and 7
+            // Using part 2 we can solve question 1, 4, 5, 6, 7, and 9
 
             // First initialize other objects with empty constructor
             marriageCountObject = new MarriageCountObject();
             ageDistributionObject = new AgeDistributionObject();
+            elderCountObject = new ElderCountObject();
 
             // Extract data from line
             residenceCountObject = DataExtractor.residenceCountExtractor(line);
@@ -69,6 +74,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
             houseValueCountObject = DataExtractor.houseValueCountExtractor(line);
             rentCountObject = DataExtractor.rentCountExtractor(line);
             roomCountObject = DataExtractor.roomCountExtractor(line);
+            renterAgeDistributionObject = DataExtractor.renterAgeDistributionExtractor(line);
         }
         else
         {
@@ -77,7 +83,7 @@ public class Run1Mapper extends Mapper<LongWritable, Text, Text, Run1CombinedWri
         }
 
         // Emit dummykey + Run1CombinedWritable pair
-        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject, housePositionCountObject, houseValueCountObject, rentCountObject, roomCountObject));
+        context.write(new Text("1"), new Run1CombinedWritable(state, residenceCountObject, marriageCountObject, ageDistributionObject, housePositionCountObject, houseValueCountObject, rentCountObject, roomCountObject, elderCountObject, renterAgeDistributionObject));
 
     }
 }

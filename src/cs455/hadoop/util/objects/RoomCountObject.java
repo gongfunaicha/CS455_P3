@@ -61,6 +61,7 @@ public class RoomCountObject {
         return new RoomCountObject(countArray);
     }
 
+    // Not used anymore
     public static RoomCountObject aggregateByState(ArrayList<RoomCountObject> collection)
     {
         long[] countArray = new long[9];
