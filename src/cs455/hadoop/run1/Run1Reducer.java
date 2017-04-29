@@ -6,6 +6,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
+
 import java.util.*;
 
 public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>{
@@ -39,6 +40,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         ArrayList<RenterAgeDistributionObject> renterAgeDistributionByState = new ArrayList<>();
 
         // Iterator through the groupByState
+
         for (Map.Entry<String, ArrayList<Run1CombinedWritable>> entry : groupByState.entrySet())
         {
             String state = entry.getKey();
@@ -58,7 +60,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
             // Perform analysis tasks
             ResidenceCountAnalysis(context, state, aggregatedResidenceCountObject);
             MarriageCountAnalysis(context, state, aggregatedMarriageCountObject);
-            AgeDistributionAnalysis(context, state, aggregatedAgeDistributionObject);
+            AgeDistributionAnalysis(context, state, aggregatedAgeDistributionObject, elderlyPeoplePercentageByState);
             HousePositionCountAnalysis(context, state, aggregatedHousePositionCountObject);
             HouseValueCountAnalysis(context, state, aggregatedHouseValueCountObject);
             RentCountAnalysis(context, state, aggregatedRentCountObject);
@@ -73,6 +75,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         }
 
         // Perform across state level aggregation and analysis
+
         PercentileAvgNumRoomAnalysis(context, avgNumRoom);
         ElderlyPeoplePercentageAnalysis(context, elderlyPeoplePercentageByState);
         RenterAgeDistributionObject USRenterAgeDistributionObject = RenterAgeDistributionObject.aggregateByState(renterAgeDistributionByState);
@@ -157,21 +160,23 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 //        context.write(new Text(state + " total female population: "), new Text(String.valueOf(femaleTotal)));
     }
 
-    private void AgeDistributionAnalysis(Context context, String state, AgeDistributionObject ageDistributionObject) throws IOException, InterruptedException
+    private void AgeDistributionAnalysis(Context context, String state, AgeDistributionObject ageDistributionObject, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException
     {
         // Get male and female count
         long male_18 = ageDistributionObject.getMale_18();
         long male19_29 = ageDistributionObject.getMale19_29();
         long male30_39 = ageDistributionObject.getMale30_39();
-        long male40_ = ageDistributionObject.getMale40_();
+        long male40_84 = ageDistributionObject.getMale40_84();
+        long male85_ = ageDistributionObject.getMale85_();
         long female_18 = ageDistributionObject.getFemale_18();
         long female19_29 = ageDistributionObject.getFemale19_29();
         long female30_39 = ageDistributionObject.getFemale30_39();
-        long female40_ = ageDistributionObject.getFemale40_();
+        long female40_84 = ageDistributionObject.getFemale40_84();
+        long female85_ = ageDistributionObject.getFemale85_();
 
         // Calculate total number of males
-        double maleTotal = male_18 + male19_29 + male30_39 + male40_;
-        double femaleTotal = female_18 + female19_29 + female30_39 + female40_;
+        double maleTotal = male_18 + male19_29 + male30_39 + male40_84 + male85_;
+        double femaleTotal = female_18 + female19_29 + female30_39 + female40_84 + female85_;
 
         // Calculate percentage
         double male_18Percentage;
@@ -224,6 +229,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
         context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old percentage: "), new Text(stringFemale30_39Percentage));
 
         // Debug output
+
 //        context.write(new Text(state + " Hispanic male below 18 years (inclusive) old count: "), new Text("\t\t\t" + String.valueOf(male_18)));
 //        context.write(new Text(state + " Hispanic male between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(male19_29)));
 //        context.write(new Text(state + " Hispanic male between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(male30_39)));
@@ -232,6 +238,7 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 //        context.write(new Text(state + " Hispanic female between 19 (inclusive) and 29 (inclusive) years old count: "), new Text(String.valueOf(female19_29)));
 //        context.write(new Text(state + " Hispanic female between 30 (inclusive) and 39 (inclusive) years old count: "), new Text(String.valueOf(female30_39)));
 //        context.write(new Text(state + " Hispanic female count: "), new Text("\t\t\t\t\t\t" + String.valueOf(femaleTotal)));
+
     }
 
     private void HousePositionCountAnalysis(Context context, String state, HousePositionCountObject housePositionCountObject) throws IOException, InterruptedException
@@ -800,6 +807,27 @@ public class Run1Reducer extends Reducer<Text, Run1CombinedWritable, Text, Text>
 
         for (int i = 0; i < 7; i++)
             context.write(new Text("**US RENTER**"), new Text(String.valueOf(notSortedAgeCountPairs.get(i).getPercentage(totalRenters))));
+    }
+
+    private void ElderlyPeoplePercentageAnalysis(Context context, HashMap<String, Double> elderlyPeoplePercentageByState) throws IOException, InterruptedException
+    {
+        double highestElderPeoplePercentage = -100;
+        String highestPercentageState = "";
+
+        for (Map.Entry<String, Double> entry: elderlyPeoplePercentageByState.entrySet())
+        {
+            String currentState = entry.getKey();
+            double currentPercentage = entry.getValue();
+
+            if (currentPercentage > highestElderPeoplePercentage)
+            {
+                highestElderPeoplePercentage = currentPercentage;
+                highestPercentageState = currentState;
+            }
+        }
+
+        String stringHighestElderPeoplePercentage = String.format("%.2f", highestElderPeoplePercentage) + "%";
+        context.write(new Text(highestPercentageState + " has the highest percentage of elderly people: "), new Text(stringHighestElderPeoplePercentage));
     }
 
 }

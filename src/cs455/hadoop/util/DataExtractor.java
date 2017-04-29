@@ -62,14 +62,17 @@ public class DataExtractor {
             male30_39 += Long.parseLong(line.substring(4026 + 9 * i, 4035 + 9 * i));
         }
 
-        long male40_ = 0;
-        // Loop from Male: 40 to 44 years to Male: 85 years and over to calculate number of male above 40 (inclusive)
-        // Loop 11 times due to 11 entries
-        for (int i = 0; i < 11; i++)
+        long male40_84 = 0;
+        // Loop from Male: 40 to 44 years to Male: 80 to 84 years to calculate number of male between 40 and 84 (inclusive)
+        // Loop 10 times due to 10 entries
+        for (int i = 0; i < 10; i++)
         {
             // Index 4045 - 4053 is Male: 40 to 44 years
-            male40_ += Long.parseLong(line.substring(4044 + 9 * i, 4053 + 9 * i));
+            male40_84 += Long.parseLong(line.substring(4044 + 9 * i, 4053 + 9 * i));
         }
+
+        // Index 4135 - 4143 is Male: 85 years and over
+        long male85_ = Long.parseLong(line.substring(4134, 4143));
 
         long female_18 = 0;
         // Loop from Female: Under 1 year to Female: 18 years to calculate number of female under 18 (inclusive)
@@ -98,16 +101,19 @@ public class DataExtractor {
             female30_39 += Long.parseLong(line.substring(4305 + 9 * i, 4314 + 9 * i));
         }
 
-        long female40_ = 0;
-        // Loop from Female: 40 to 44 years to Female: 85 years and over to calculate number of female above 40 (inclusive)
-        // Loop 11 times due to 11 entries
-        for (int i = 0; i < 11; i++)
+        long female40_84 = 0;
+        // Loop from Female: 40 to 44 years to Female: 80 to 84 years to calculate number of female between 40 and 84 (inclusive)
+        // Loop 10 times due to 10 entries
+        for (int i = 0; i < 10; i++)
         {
-            // Index 4324 - 4332 is Male: 40 to 44 years
-            female40_ += Long.parseLong(line.substring(4323 + 9 * i, 4332 + 9 * i));
+            // Index 4324 - 4332 is Female: 40 to 44 years
+            female40_84 += Long.parseLong(line.substring(4323 + 9 * i, 4332 + 9 * i));
         }
 
-        return new AgeDistributionObject(male_18, male19_29, male30_39, male40_, female_18, female19_29, female30_39, female40_);
+        // Index 4414 - 4422 is Female: 85 years and over
+        long female85_ = Long.parseLong(line.substring(4413, 4422));
+
+        return new AgeDistributionObject(male_18, male19_29, male30_39, male40_84, male85_, female_18, female19_29, female30_39, female40_84, female85_);
     }
 
     public static HousePositionCountObject housePositionCountExtractor(String line)
